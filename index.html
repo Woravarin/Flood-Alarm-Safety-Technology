@@ -58,6 +58,16 @@ input[type=number]{font:inherit;color:var(--text);background:var(--panel2);borde
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:.8rem;color:var(--mute)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
 footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
+.alarm{position:fixed;inset:0;z-index:99;background:#b3121c;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px))}
+.alarm.on{display:flex;animation:flash 1s steps(2) infinite}
+@keyframes flash{50%{background:#7d0a12}}
+@media (prefers-reduced-motion:reduce){.alarm.on{animation:none}}
+.alarm h2{font-size:2rem;line-height:1.3}
+.alarm p{font-size:1.15rem;max-width:520px}
+select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:100%}
+.simbar{background:var(--warn);color:#10202e;font-weight:600;border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.simbar[hidden]{display:none}
+.alarm button{background:#fff;color:#7d0a12;font-weight:700;font-size:1.1rem;padding:14px 28px;border:0;margin-top:10px}
 @media (max-width:800px){
   .loc{grid-template-columns:1fr}
   .time{text-align:left}
@@ -88,7 +98,8 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
       <div class="sub" id="coordText"></div>
       <div class="btns">
         <button class="pri" id="gps" type="button">📍 ใช้ตำแหน่งปัจจุบัน (GPS)</button>
-        <button id="notify" type="button">🔔 เปิดการแจ้งเตือน</button>
+        <button id="alarmBtn" type="button">🔔 เปิดระบบ Alarm</button>
+        <button id="testAlarm" type="button">🔊 ทดสอบเสียงเร็ว</button>
         <button id="theme" type="button">◐ โหมดสี</button>
       </div>
       <div class="coords">
@@ -96,6 +107,7 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
         <div><label for="lon">ลองจิจูด</label><input id="lon" type="number" step="any" min="-180" max="180"></div>
         <button id="setLoc" type="button">ตั้งค่า</button>
       </div>
+      <div class="msg" id="alarmState"></div>
       <div class="msg" id="msg" aria-live="polite"></div>
     </section>
     <section class="card">
@@ -104,6 +116,21 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
       <div class="sub" style="margin-top:8px"><a id="bigMap" href="#" target="_blank" rel="noopener" style="color:var(--water)">เปิดแผนที่ขนาดใหญ่</a></div>
     </section>
   </div>
+
+  <section class="card" style="margin-bottom:18px">
+    <h2>🧪 โหมดทดลอง</h2>
+    <div class="sub">จำลองสถานการณ์ฝนตกหนักเพื่อทดสอบระบบเตือนทั้งชุด ใช้ข้อมูลสมมติ และทำงานเฉพาะบนเครื่องนี้ ไม่ส่งเตือนใคร</div>
+    <div class="btns">
+      <select id="simSel" aria-label="เลือกสถานการณ์จำลอง">
+        <option value="high">ฝนหนักในอีก 2 ชม. (ระดับสูง)</option>
+        <option value="crit">ฝนตกหนักอยู่ตอนนี้ (ระดับวิกฤต)</option>
+      </select>
+      <button class="pri" id="simStart" type="button">▶ เริ่มทดลอง</button>
+      <button id="simStop" type="button" hidden>⏹ หยุดทดลอง กลับไปใช้ข้อมูลจริง</button>
+    </div>
+  </section>
+
+  <div class="simbar" id="simBar" hidden>🧪 กำลังอยู่ในโหมดทดลอง ข้อมูลทั้งหมดด้านล่างเป็นข้อมูลสมมติ ไม่ใช่สภาพอากาศจริง</div>
 
   <section class="banner" id="banner" aria-live="polite">
     <div class="gauge">
@@ -139,6 +166,13 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
       <span><i style="background:var(--crit)"></i>วิกฤต 75% ขึ้นไป</span>
     </div>
   </section>
+
+  <div class="alarm" id="alarm" role="alertdialog" aria-live="assertive" aria-labelledby="alarmTitle">
+    <div style="font-size:4rem" aria-hidden="true">🚨</div>
+    <h2 id="alarmTitle"></h2>
+    <p id="alarmText"></p>
+    <button id="alarmOk" type="button">รับทราบ ปิดเสียง</button>
+  </div>
 
   <footer>ข้อมูลฝนจาก Open-Meteo • คำนวณความเสี่ยงเบื้องต้นจากปริมาณฝนและโอกาสฝนตก ไม่ใช้แทนประกาศทางการ</footer>
 </div>
@@ -250,7 +284,7 @@ function score(rate, accum, prob) {
 
 /* ---------- ดึงข้อมูลอากาศ ---------- */
 async function refresh() {
-  if (!loc) return;
+  if (!loc || simOn) return;
   say("กำลังตรวจสอบสภาพอากาศ...");
   try {
     const url = "https://api.open-meteo.com/v1/forecast?latitude=" + loc.lat + "&longitude=" + loc.lon +
@@ -297,25 +331,175 @@ function render(d) {
   }).join("");
   $("labels").innerHTML = OFFSETS.map(([, t]) => "<div>" + t + "</div>").join("");
 
-  if (idx >= 2 && idx > lastLvl) {
-    notify("🌧️ FAST แจ้งเตือน: " + L.name, "ความเสี่ยงน้ำท่วม " + risk + "% บริเวณ " + (loc.name || "ตำแหน่งของคุณ"));
+  /* Alarm: ดูความเสี่ยงสูงสุดของตอนนี้และอีก 3 ชม. ข้างหน้า และหาว่าฝนหนัก (10 มม./ชม. ขึ้นไป) จะมาเมื่อไหร่ */
+  const soon = Math.max(risk, at(3));
+  let eta = -1;
+  for (let k = 0; k <= 5; k++) {
+    if ((k ? 0 : cur.rain) >= 10 || (R[i + k] || 0) >= 10) { eta = k; break; }
   }
-  lastLvl = idx;
+  checkAlarm(lvlIdx(soon), soon, eta);
 }
 
-/* ---------- การแจ้งเตือน ---------- */
-async function enableNotify() {
-  if (!("Notification" in window)) { say("เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน"); return; }
-  const p = await Notification.requestPermission();
-  say(p === "granted" ? "เปิดการแจ้งเตือนแล้ว ✓ (ต้องเปิดหน้านี้ค้างไว้)" : "ยังไม่ได้อนุญาตการแจ้งเตือน");
+/* ---------- ระบบ Alarm ---------- */
+const REPEAT_MS = 30 * 60 * 1000;   // ถ้ายังเสี่ยงอยู่ เตือนซ้ำทุก 30 นาที
+const baseTitle = document.title;
+let alarmOn = false, lastAlarm = 0, ctx = null, siren = null, vibTimer = null, stopTimer = null, titleTimer = null, wakeLock = null;
+
+function prefGet() { try { return localStorage.getItem("fast_alarm") === "1"; } catch (e) { return false; } }
+function prefSet(v) { try { localStorage.setItem("fast_alarm", v ? "1" : "0"); } catch (e) {} }
+
+/* เบราว์เซอร์อนุญาตให้เล่นเสียงได้หลังผู้ใช้แตะหน้าจออย่างน้อย 1 ครั้ง */
+function audioReady() {
+  try {
+    if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.onstatechange = alarmState; }
+    if (ctx.state === "suspended") ctx.resume();
+  } catch (e) { ctx = null; }
+  alarmState();
 }
-function notify(title, body) {
-  if ("Notification" in window && Notification.permission === "granted") new Notification(title, { body });
+document.addEventListener("pointerdown", audioReady, { once: true });
+
+function alarmState() {
+  const ok = ctx && ctx.state === "running";
+  $("alarmBtn").textContent = alarmOn ? "🔕 ปิดระบบ Alarm" : "🔔 เปิดระบบ Alarm";
+  $("alarmState").textContent = alarmOn
+    ? "Alarm เปิดอยู่ " + (ok ? "เสียงพร้อมใช้งาน ✓" : "แตะที่ใดก็ได้บนหน้านี้เพื่อเปิดเสียง")
+    : "Alarm ปิดอยู่ กด “เปิดระบบ Alarm” เพื่อให้เตือนเมื่อฝนจะตกหนัก";
+}
+
+async function keepAwake() {
+  try {
+    if (alarmOn && !wakeLock && "wakeLock" in navigator) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.onrelease = () => { wakeLock = null; };
+    }
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) keepAwake(); });
+
+async function toggleAlarm() {
+  audioReady();
+  if (alarmOn) {
+    alarmOn = false; prefSet(false);
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
+    alarmState();
+    say("ปิดระบบ Alarm แล้ว");
+    return;
+  }
+  if ("Notification" in window && Notification.permission === "default") {
+    try { await Notification.requestPermission(); } catch (e) {}
+  }
+  alarmOn = true; prefSet(true);
+  keepAwake(); alarmState();
+  say("เปิดระบบ Alarm แล้ว ✓ ต้องเปิดหน้านี้ค้างไว้และเปิดเสียงเครื่องไว้");
+}
+
+function startSiren() {
+  stopSiren();
+  if (ctx && ctx.state === "running") {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "square"; o.frequency.value = 700; g.gain.value = 0.25;
+    o.connect(g); g.connect(ctx.destination); o.start();
+    let hi = false;
+    siren = { o, t: setInterval(() => { hi = !hi; o.frequency.setValueAtTime(hi ? 1000 : 700, ctx.currentTime); }, 450) };
+  }
+  if (navigator.vibrate) {
+    navigator.vibrate([600, 300, 600, 300, 600]);
+    vibTimer = setInterval(() => navigator.vibrate([600, 300, 600, 300, 600]), 3000);
+  }
+  let flash = false;
+  titleTimer = setInterval(() => { flash = !flash; document.title = flash ? "🚨 ฝนกำลังจะตกหนัก!" : baseTitle; }, 800);
+  stopTimer = setTimeout(stopSiren, 2 * 60 * 1000);   // เสียงดังสูงสุด 2 นาที หน้าจอแดงยังค้างจนกว่าจะกดรับทราบ
+}
+function stopSiren() {
+  if (siren) { clearInterval(siren.t); try { siren.o.stop(); } catch (e) {} siren = null; }
+  clearInterval(vibTimer); clearInterval(titleTimer); clearTimeout(stopTimer);
+  if (navigator.vibrate) navigator.vibrate(0);
+  document.title = baseTitle;
+}
+
+function fireAlarm(title, text) {
+  lastAlarm = Date.now();
+  $("alarmTitle").textContent = title;
+  $("alarmText").textContent = text;
+  $("alarm").classList.add("on");
+  startSiren();
+  if ("Notification" in window && Notification.permission === "granted") {
+    try { new Notification("🚨 " + title, { body: text, requireInteraction: true, tag: "fast-alarm", renotify: true }); } catch (e) {}
+  }
+}
+function ackAlarm() { $("alarm").classList.remove("on"); stopSiren(); }
+function testAlarm() {
+  audioReady();
+  fireAlarm("ทดสอบระบบ Alarm", "ถ้าได้ยินเสียงและเห็นหน้าจอสีแดง แปลว่าระบบพร้อมใช้งาน กด “รับทราบ” เพื่อปิด");
+}
+
+function checkAlarm(sIdx, soon, eta) {
+  const due = Date.now() - lastAlarm > REPEAT_MS;
+  if ((alarmOn || simOn) && sIdx >= 2 && (sIdx > lastLvl || due)) {
+    const when = eta === 0 ? "ขณะนี้ฝนตกหนักแล้ว" : eta > 0 ? "คาดว่าฝนจะตกหนักภายใน " + eta + " ชม." : "มีโอกาสฝนตกหนักในช่วงนี้";
+    fireAlarm(sIdx === 3 ? "อันตราย เสี่ยงน้ำท่วมรุนแรง" : "ฝนกำลังจะตกหนัก ไม่ควรออกจากบ้าน",
+      when + " ความเสี่ยงน้ำท่วม " + soon + "% บริเวณ " + ((loc && loc.name) || "ตำแหน่งของคุณ") + " ควรอยู่ในที่ปลอดภัยและเตรียมรับมือ");
+  }
+  lastLvl = sIdx;
+}
+
+/* ---------- โหมดทดลอง (ข้อมูลสมมติ ทำงานเฉพาะบนเครื่องนี้) ---------- */
+let simOn = false;
+const SCENARIOS = {
+  high: { name: "ฝนหนักในอีก 2 ชม. (ระดับสูง)",     cur: 0,  past: 0, prob: 80, rain: [0, 2, 10, 18, 20, 10, 4, 1, 0, 0, 0, 0] },
+  crit: { name: "ฝนตกหนักอยู่ตอนนี้ (ระดับวิกฤต)", cur: 30, past: 5, prob: 95, rain: [30, 35, 40, 30, 20, 10, 5, 2, 0, 0, 0, 0] }
+};
+function isoHour(d) {
+  const p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":00";
+}
+/* สร้างข้อมูลหน้าตาเหมือนที่ Open-Meteo ส่งมา แล้วส่งเข้า render() ตัวเดียวกับของจริง */
+function fakeData(s) {
+  const base = new Date(); base.setMinutes(0, 0, 0);
+  const time = [], rain = [], prob = [];
+  for (let h = -24; h < 48; h++) {
+    time.push(isoHour(new Date(base.getTime() + h * 3600000)));
+    rain.push(h < 0 ? (h >= -6 ? s.past : 0) : (s.rain[h] || 0));
+    prob.push(h >= 0 && h < 10 ? s.prob : 20);
+  }
+  return {
+    current: { time: isoHour(base), temperature_2m: 27, relative_humidity_2m: 94, rain: s.cur },
+    hourly: { time, rain, precipitation_probability: prob }
+  };
+}
+async function startSim() {
+  audioReady();
+  if ("Notification" in window && Notification.permission === "default") {
+    try { await Notification.requestPermission(); } catch (e) {}
+  }
+  const s = SCENARIOS[$("simSel").value];
+  simOn = true; lastLvl = -1; lastAlarm = 0;
+  $("simBar").hidden = false;
+  $("simStart").hidden = true;
+  $("simStop").hidden = false;
+  $("simSel").disabled = true;
+  $("updated").textContent = "โหมดทดลอง (ข้อมูลสมมติ)";
+  say("กำลังจำลอง: " + s.name);
+  render(fakeData(s));
+}
+function stopSim() {
+  simOn = false; lastLvl = -1; lastAlarm = 0;
+  ackAlarm();
+  $("simBar").hidden = true;
+  $("simStart").hidden = false;
+  $("simStop").hidden = true;
+  $("simSel").disabled = false;
+  say("");
+  refresh();
 }
 
 /* ---------- เริ่มทำงาน ---------- */
 $("gps").onclick = startAuto;
-$("notify").onclick = enableNotify;
+$("alarmBtn").onclick = toggleAlarm;
+$("testAlarm").onclick = testAlarm;
+$("alarmOk").onclick = ackAlarm;
+$("simStart").onclick = startSim;
+$("simStop").onclick = stopSim;
 $("setLoc").onclick = () => {
   const lat = parseFloat($("lat").value), lon = parseFloat($("lon").value);
   if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) { say("พิกัดไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง"); return; }
@@ -330,6 +514,9 @@ $("theme").onclick = () => {
   r.setAttribute("data-theme", dark ? "light" : "dark");
 };
 
+alarmOn = prefGet();
+alarmState();
+if (alarmOn) keepAwake();
 tickClock();
 setInterval(tickClock, 1000);
 const saved = loadLoc();

@@ -3,68 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Flood Alarm | ระบบเฝ้าระวังน้ำท่วม</title>
+<title>FAST - Flood Alert System & Tracking</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#eef3f7;--panel:#fff;--panel2:#e6edf3;--line:#d3dde6;--text:#10202e;--mute:#58697a;
-  --water:#0a7bb8;--ok:#1f9d63;--warn:#c98a00;--high:#d9622b;--crit:#d3303a;--lvl:var(--warn);
-  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
-}
+  --water:#0a7bb8;--ok:#1f9d63;--warn:#c98a00;--high:#d9622b;--crit:#d3303a;--lvl:var(--ok)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0a1420;--panel:#112031;--panel2:#0b1826;--line:#223a52;--text:#e8f1f8;--mute:#8da3b8;
   --water:#4cb4ec;--ok:#4cd68f;--warn:#f2c14e;--high:#ff8a4c;--crit:#ff5d66}}
 :root[data-theme="dark"]{
   --bg:#0a1420;--panel:#112031;--panel2:#0b1826;--line:#223a52;--text:#e8f1f8;--mute:#8da3b8;
   --water:#4cb4ec;--ok:#4cd68f;--warn:#f2c14e;--high:#ff8a4c;--crit:#ff5d66}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",Tahoma,sans-serif;line-height:1.6;min-height:100vh}
 .wrap{max-width:1100px;margin:0 auto;padding:20px 5% 40px}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:22px}
 h1{font-size:1.5rem;font-weight:700}
 .sub{color:var(--mute);font-size:.9rem}
-.live{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--mute)}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
-@keyframes pulse{50%{opacity:.35}}
-@media (prefers-reduced-motion:reduce){.dot{animation:none}}
-button{font:inherit;cursor:pointer;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+.time{text-align:right}
+.time b{display:block;font-size:1.9rem;line-height:1.2;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px}
+button.pri{background:var(--water);color:#fff;border-color:var(--water);font-weight:600}
+button:hover{opacity:.88}
 button:focus-visible,input:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+input[type=number]{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:12px}
+.loc{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.place{font-size:1.25rem;font-weight:700}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.coords{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.coords label{font-size:.8rem;color:var(--mute);display:block}
+.map{border-radius:10px;overflow:hidden;border:1px solid var(--line);min-height:240px}
+.map iframe{display:block;width:100%;height:100%;min-height:240px;border:0}
+.msg{margin-top:12px;font-size:.88rem;color:var(--mute);min-height:1.4em}
 .banner{border-radius:14px;padding:20px 24px;background:var(--panel);border:1px solid var(--line);border-left:8px solid var(--lvl);display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;margin-bottom:18px}
 .gauge{width:190px;position:relative}
 .gauge svg{width:100%;display:block}
 .gnum{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:2.4rem;font-weight:700;line-height:1;color:var(--lvl)}
 .gnum small{font-size:1rem}
 .lvl{font-size:1.5rem;font-weight:700;color:var(--lvl)}
-.banner ul{margin:10px 0 0 1.2rem;color:var(--text)}
-.banner li{margin:2px 0}
-.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-bottom:18px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
-.card h2{font-size:1rem;font-weight:600;margin-bottom:14px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--panel2);border-radius:10px;padding:12px}
-.stat b{display:block;font-size:1.35rem}
+.banner ul{margin:10px 0 0 1.2rem}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:1.4rem}
 .stat span{color:var(--mute);font-size:.8rem}
-.ctrl{margin-top:16px}
-.ctrl label{display:flex;justify-content:space-between;font-size:.9rem;margin-top:10px}
-input[type=range]{width:100%;accent-color:var(--water)}
-.hint{color:var(--mute);font-size:.8rem;margin-top:10px}
-.map{background:var(--panel2);border-radius:10px;overflow:hidden}
-.map svg{display:block;width:100%;height:auto}
-.bars{display:flex;align-items:flex-end;gap:12px;height:170px;border-bottom:1px solid var(--line);padding-bottom:0}
+.bars{display:flex;align-items:flex-end;gap:12px;height:170px;border-bottom:1px solid var(--line)}
 .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
 .col .v{font-weight:600;font-size:.95rem;margin-bottom:4px}
 .col .b{width:100%;max-width:70px;border-radius:6px 6px 0 0;min-height:4px;transition:height .3s}
 .labels{display:flex;gap:12px;margin-top:6px}
 .labels div{flex:1;text-align:center;color:var(--mute);font-size:.8rem}
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:.8rem;color:var(--mute)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
 footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
 @media (max-width:800px){
-  .grid{grid-template-columns:1fr}
+  .loc{grid-template-columns:1fr}
+  .time{text-align:left}
   .banner{grid-template-columns:1fr;justify-items:center;text-align:center}
   .banner ul{text-align:left}
-  .stats{grid-template-columns:1fr 1fr 1fr}
+  .stats{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -72,14 +71,39 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
 <div class="wrap">
   <header>
     <div>
-      <h1>🌊 Flood Alarm</h1>
-      <div class="sub">เฝ้าระวังน้ำท่วมรัศมี 5 กม. จากบ้านของคุณ</div>
+      <h1>🌊 FAST</h1>
+      <div class="sub">Flood Alert System & Tracking</div>
     </div>
-    <div class="live">
-      <span class="dot"></span><span id="clock">อัปเดตล่าสุด --:--</span>
-      <button id="theme" type="button" aria-label="สลับโหมดสว่างหรือมืด">◐ โหมด</button>
+    <div class="time">
+      <b id="clock">--:--:--</b>
+      <div class="sub" id="date">--</div>
+      <div class="sub" id="updated">ยังไม่ได้อัปเดต</div>
     </div>
   </header>
+
+  <div class="loc">
+    <section class="card">
+      <h2>📍 ตำแหน่งที่เฝ้าระวัง</h2>
+      <div class="place" id="place">กำลังโหลด...</div>
+      <div class="sub" id="coordText"></div>
+      <div class="btns">
+        <button class="pri" id="gps" type="button">📍 ใช้ตำแหน่งปัจจุบัน (GPS)</button>
+        <button id="notify" type="button">🔔 เปิดการแจ้งเตือน</button>
+        <button id="theme" type="button">◐ โหมดสี</button>
+      </div>
+      <div class="coords">
+        <div><label for="lat">ละติจูด</label><input id="lat" type="number" step="any" min="-90" max="90"></div>
+        <div><label for="lon">ลองจิจูด</label><input id="lon" type="number" step="any" min="-180" max="180"></div>
+        <button id="setLoc" type="button">ตั้งค่า</button>
+      </div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </section>
+    <section class="card">
+      <h2>🗺️ แผนที่รัศมีประมาณ 5 กม.</h2>
+      <div class="map"><iframe id="map" title="แผนที่ตำแหน่งปัจจุบัน" loading="lazy"></iframe></div>
+      <div class="sub" style="margin-top:8px"><a id="bigMap" href="#" target="_blank" rel="noopener" style="color:var(--water)">เปิดแผนที่ขนาดใหญ่</a></div>
+    </section>
+  </div>
 
   <section class="banner" id="banner" aria-live="polite">
     <div class="gauge">
@@ -87,53 +111,25 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
         <path d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>
         <path id="arc" d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="var(--lvl)" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
       </svg>
-      <div class="gnum"><span id="num">0</span><small>%</small></div>
+      <div class="gnum"><span id="num">--</span><small>%</small></div>
     </div>
     <div>
-      <div class="lvl" id="lvl"></div>
+      <div class="lvl" id="lvl">กำลังวิเคราะห์...</div>
       <div class="sub" id="lvlDesc"></div>
       <ul id="acts"></ul>
     </div>
   </section>
 
-  <div class="grid">
-    <section class="card">
-      <h2>สภาพปัจจุบัน</h2>
-      <div class="stats">
-        <div class="stat"><b id="sTemp">29°C</b><span>อุณหภูมิ</span></div>
-        <div class="stat"><b id="sRain">--</b><span>ฝน (มม./ชม.)</span></div>
-        <div class="stat"><b id="sWater">--</b><span>ระดับน้ำ (% ของตลิ่ง)</span></div>
-      </div>
-      <div class="ctrl">
-        <div class="sub">ลองจำลองสถานการณ์ เพื่อดูว่าระบบจะเตือนอย่างไร</div>
-        <label for="rain"><span>🌧️ ปริมาณฝน</span><b id="rainV"></b></label>
-        <input id="rain" type="range" min="0" max="80" value="15">
-        <label for="water"><span>💧 ระดับน้ำในคลอง</span><b id="waterV"></b></label>
-        <input id="water" type="range" min="0" max="100" value="55">
-        <div class="hint">ข้อมูลในหน้านี้เป็นข้อมูลตัวอย่าง ยังไม่เชื่อมต่อเซนเซอร์หรือสถานีวัดจริง</div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>📍 พื้นที่เฝ้าระวัง</h2>
-      <div class="map">
-        <svg viewBox="0 0 400 300" role="img" aria-label="แผนที่รัศมี 5 กิโลเมตร มีบ้านอยู่ตรงกลางและคลองไหลผ่าน">
-          <g stroke="var(--line)" stroke-width="1"><path d="M0 100H400M0 200H400M133 0V300M266 0V300"/></g>
-          <path d="M-10 230 C80 200 120 120 210 140 S330 90 410 40" fill="none" stroke="var(--water)" stroke-width="9" opacity=".55" stroke-linecap="round"/>
-          <g id="cells" fill="var(--water)"></g>
-          <circle cx="200" cy="150" r="125" fill="var(--water)" fill-opacity=".07" stroke="var(--water)" stroke-width="2" stroke-dasharray="6 5"/>
-          <circle cx="200" cy="150" r="14" fill="var(--crit)" fill-opacity=".25"/>
-          <circle cx="200" cy="150" r="6" fill="var(--crit)"/>
-          <text x="214" y="146" font-size="13" fill="var(--text)" font-family="IBM Plex Sans Thai,sans-serif">บ้าน</text>
-          <text x="14" y="288" font-size="12" fill="var(--mute)" font-family="IBM Plex Sans Thai,sans-serif">เส้นประ = รัศมี 5 กม.</text>
-          <text x="300" y="86" font-size="12" fill="var(--water)" font-family="IBM Plex Sans Thai,sans-serif">คลอง</text>
-        </svg>
-      </div>
-    </section>
+  <div class="stats">
+    <div class="stat"><b id="sTemp">--</b><span>อุณหภูมิ (°C)</span></div>
+    <div class="stat"><b id="sHum">--</b><span>ความชื้น (%)</span></div>
+    <div class="stat"><b id="sRain">--</b><span>ฝนปัจจุบัน (มม.)</span></div>
+    <div class="stat"><b id="sMax">--</b><span>ฝนสูงสุดใน 6 ชม. (มม./ชม.)</span></div>
+    <div class="stat"><b id="sSum">--</b><span>ฝนสะสม 24 ชม. ข้างหน้า (มม.)</span></div>
   </div>
 
   <section class="card">
-    <h2>📈 แนวโน้มความเสี่ยงใน 24 ชั่วโมง</h2>
+    <h2>📈 แนวโน้มความเสี่ยงน้ำท่วม</h2>
     <div class="bars" id="bars"></div>
     <div class="labels" id="labels"></div>
     <div class="legend">
@@ -144,52 +140,172 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
     </div>
   </section>
 
-  <footer>Flood Alarm System • ระบบต้นแบบ ไม่ใช้แทนประกาศทางการ</footer>
+  <footer>ข้อมูลฝนจาก Open-Meteo • คำนวณความเสี่ยงเบื้องต้นจากปริมาณฝนและโอกาสฝนตก ไม่ใช้แทนประกาศทางการ</footer>
 </div>
 
 <script>
-const LV=[
-  {max:25,name:"ความเสี่ยงต่ำ",c:"var(--ok)",d:"สถานการณ์ปกติ",a:["ติดตามพยากรณ์อากาศตามปกติ"]},
-  {max:50,name:"เฝ้าระวัง",c:"var(--warn)",d:"ยังไม่พบสัญญาณน้ำท่วมรุนแรง แต่ควรติดตามฝนและระดับน้ำต่อเนื่อง",a:["ตรวจสอบทางระบายน้ำรอบบ้าน","ชาร์จโทรศัพท์และเตรียมไฟฉาย"]},
-  {max:75,name:"ความเสี่ยงสูง",c:"var(--high)",d:"มีโอกาสน้ำท่วมขังหรือน้ำล้นตลิ่ง ควรเตรียมรับมือ",a:["ยกของมีค่าและเอกสารขึ้นที่สูง","จอดรถบนพื้นที่สูง","เตรียมกระเป๋าฉุกเฉินและยา"]},
-  {max:101,name:"วิกฤต",c:"var(--crit)",d:"เสี่ยงน้ำท่วมรุนแรง ควรเตรียมอพยพทันที",a:["ปิดไฟและวาล์วแก๊สก่อนออกจากบ้าน","อพยพไปยังจุดปลอดภัยที่กำหนด","โทร 1784 (ปภ.) หรือ 191 หากต้องการความช่วยเหลือ"]}
-];
-const T=[["ตอนนี้",1],["+3 ชม.",1.2],["+6 ชม.",1.5],["+12 ชม.",1.3],["+24 ชม.",.8]];
-const $=id=>document.getElementById(id);
-const lvl=r=>LV.find(l=>r<l.max);
-const calc=(rain,w)=>Math.max(0,Math.min(99,Math.round(5+rain*.8+w*.35)));
+/* ตำแหน่งเริ่มต้น (นครศรีธรรมราช) ใช้เมื่อยังไม่เคยเลือกตำแหน่ง */
+const DEFAULT_LOC = { lat: 8.4304, lon: 99.9631, name: "นครศรีธรรมราช" };
 
-function render(){
-  const rain=+$("rain").value,w=+$("water").value,r=calc(rain,w),L=lvl(r);
-  document.documentElement.style.setProperty("--lvl",L.c);
-  $("num").textContent=r;
-  $("arc").setAttribute("stroke-dasharray",r+" 100");
-  $("lvl").textContent=L.name;
-  $("lvlDesc").textContent=L.d;
-  $("acts").innerHTML=L.a.map(a=>"<li>"+a+"</li>").join("");
-  $("rainV").textContent=rain+" มม./ชม.";
-  $("waterV").textContent=w+"%";
-  $("sRain").textContent=rain;
-  $("sWater").textContent=w+"%";
-  $("bars").innerHTML=T.map(([,f])=>{
-    const v=calc(Math.min(80,rain*f),Math.min(100,w*(f>1?1+(f-1)*.4:f>.9?1:.9)));
-    return '<div class="col"><div class="v">'+v+'%</div><div class="b" style="height:'+v*1.2+'px;background:'+lvl(v).c+'"></div></div>';
+const LV = [
+  { max: 25,  name: "ความเสี่ยงต่ำ", c: "var(--ok)",   d: "สถานการณ์ปกติ", a: ["ติดตามพยากรณ์อากาศตามปกติ"] },
+  { max: 50,  name: "เฝ้าระวัง",     c: "var(--warn)", d: "ยังไม่พบสัญญาณน้ำท่วมรุนแรง แต่ควรติดตามฝนต่อเนื่อง", a: ["ตรวจสอบทางระบายน้ำรอบบ้าน", "ชาร์จโทรศัพท์และเตรียมไฟฉาย"] },
+  { max: 75,  name: "ความเสี่ยงสูง", c: "var(--high)", d: "มีโอกาสน้ำท่วมขัง ควรเตรียมรับมือ", a: ["ยกของมีค่าและเอกสารขึ้นที่สูง", "จอดรถบนพื้นที่สูง", "เตรียมกระเป๋าฉุกเฉินและยา"] },
+  { max: 101, name: "วิกฤต",         c: "var(--crit)", d: "เสี่ยงน้ำท่วมรุนแรง ควรเตรียมอพยพ", a: ["ปิดไฟและวาล์วแก๊สก่อนออกจากบ้าน", "ไปยังจุดปลอดภัยที่กำหนด", "โทร 1784 (ปภ.) หากต้องการความช่วยเหลือ"] }
+];
+const OFFSETS = [[0, "ตอนนี้"], [3, "+3 ชม."], [6, "+6 ชม."], [12, "+12 ชม."], [24, "+24 ชม."]];
+
+const $ = id => document.getElementById(id);
+const lvlIdx = r => LV.findIndex(l => r < l.max);
+let loc = loadLoc() || { ...DEFAULT_LOC };
+let lastLvl = -1;
+
+/* ---------- เก็บตำแหน่งไว้ในเครื่อง ---------- */
+function loadLoc() { try { return JSON.parse(localStorage.getItem("fast_loc")); } catch (e) { return null; } }
+function saveLoc() { try { localStorage.setItem("fast_loc", JSON.stringify(loc)); } catch (e) {} }
+function say(t) { $("msg").textContent = t; }
+
+/* ---------- นาฬิกาและวันที่ ---------- */
+function tickClock() {
+  const d = new Date();
+  $("clock").textContent = d.toLocaleTimeString("th-TH", { hour12: false });
+  $("date").textContent = d.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
+/* ---------- แผนที่ ---------- */
+function showLocation() {
+  const { lat, lon } = loc, p = 0.05;
+  $("map").src = "https://www.openstreetmap.org/export/embed.html?bbox=" +
+    [lon - p, lat - p, lon + p, lat + p].join(",") + "&layer=mapnik&marker=" + lat + "," + lon;
+  $("bigMap").href = "https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=14/" + lat + "/" + lon;
+  $("place").textContent = loc.name || "ตำแหน่งของคุณ";
+  $("coordText").textContent = lat.toFixed(5) + ", " + lon.toFixed(5) + (loc.acc ? "  (ความแม่นยำ ±" + Math.round(loc.acc) + " ม.)" : "");
+  $("lat").value = lat.toFixed(5);
+  $("lon").value = lon.toFixed(5);
+}
+
+async function lookupName() {
+  try {
+    const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=th&lat=" + loc.lat + "&lon=" + loc.lon);
+    const a = (await r.json()).address || {};
+    const parts = [a.suburb || a.village || a.neighbourhood, a.town || a.city || a.county || a.state_district, a.state].filter(Boolean);
+    if (parts.length) { loc.name = parts.join(", "); saveLoc(); showLocation(); }
+  } catch (e) { /* ใช้พิกัดแทนชื่อสถานที่ */ }
+}
+
+function setLocation(lat, lon, acc) {
+  loc = { lat, lon, acc, name: null };
+  saveLoc();
+  showLocation();
+  lookupName();
+  refresh();
+}
+
+function useGPS() {
+  if (!navigator.geolocation) { say("เบราว์เซอร์นี้ไม่รองรับ GPS"); return; }
+  say("กำลังหาตำแหน่ง...");
+  navigator.geolocation.getCurrentPosition(
+    p => { setLocation(p.coords.latitude, p.coords.longitude, p.coords.accuracy); say("ใช้ตำแหน่งปัจจุบันแล้ว ✓"); },
+    e => say(e.code === 1 ? "ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง กรุณาอนุญาตในเบราว์เซอร์ หรือกรอกพิกัดเอง"
+           : e.code === 3 ? "หาตำแหน่งไม่ทันเวลา ลองใหม่อีกครั้ง"
+           : "หาตำแหน่งไม่ได้ (GPS ต้องใช้ผ่าน https หรือ localhost)"),
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
+
+/* ---------- คำนวณความเสี่ยง ---------- */
+function score(rate, accum, prob) {
+  let r = 0;
+  r += rate >= 30 ? 45 : rate >= 20 ? 30 : rate >= 10 ? 18 : rate >= 5 ? 10 : rate >= 1 ? 4 : 0;
+  r += accum >= 100 ? 35 : accum >= 50 ? 25 : accum >= 25 ? 15 : accum >= 10 ? 6 : 0;
+  r += prob >= 80 ? 15 : prob >= 50 ? 8 : prob >= 30 ? 3 : 0;
+  return Math.min(100, r);
+}
+
+/* ---------- ดึงข้อมูลอากาศ ---------- */
+async function refresh() {
+  say("กำลังตรวจสอบสภาพอากาศ...");
+  try {
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=" + loc.lat + "&longitude=" + loc.lon +
+      "&current=temperature_2m,relative_humidity_2m,rain&hourly=rain,precipitation_probability" +
+      "&past_days=1&forecast_days=3&timezone=auto";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    render(await res.json());
+    $("updated").textContent = "อัปเดตล่าสุด " + new Date().toLocaleTimeString("th-TH", { hour12: false });
+    say("");
+  } catch (e) {
+    console.error(e);
+    say("ดึงข้อมูลอากาศไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วระบบจะลองใหม่อัตโนมัติ");
+  }
+}
+
+function render(d) {
+  const cur = d.current, R = d.hourly.rain, P = d.hourly.precipitation_probability;
+  const key = cur.time.slice(0, 13);
+  let i = d.hourly.time.findIndex(t => t.slice(0, 13) >= key);
+  if (i < 0) i = 0;
+  const lo = a => Math.max(0, a), hi = (arr, b) => Math.min(arr.length - 1, b);
+  const sum = (a, b) => { let s = 0; for (let k = lo(a); k <= hi(R, b); k++) s += R[k] || 0; return s; };
+  const mx = (arr, a, b) => { let m = 0; for (let k = lo(a); k <= hi(arr, b); k++) m = Math.max(m, arr[k] || 0); return m; };
+  const at = o => score(Math.max(o ? 0 : cur.rain, mx(R, i + o, i + o + 2)), sum(i + o - 3, i + o + 3), mx(P, i + o, i + o + 2));
+
+  const risk = at(0), idx = lvlIdx(risk), L = LV[idx];
+  document.documentElement.style.setProperty("--lvl", L.c);
+  $("num").textContent = risk;
+  $("arc").setAttribute("stroke-dasharray", risk + " 100");
+  $("lvl").textContent = L.name;
+  $("lvlDesc").textContent = L.d;
+  $("acts").innerHTML = L.a.map(a => "<li>" + a + "</li>").join("");
+
+  $("sTemp").textContent = cur.temperature_2m;
+  $("sHum").textContent = cur.relative_humidity_2m;
+  $("sRain").textContent = cur.rain;
+  $("sMax").textContent = mx(R, i, i + 5).toFixed(1);
+  $("sSum").textContent = sum(i, i + 23).toFixed(1);
+
+  $("bars").innerHTML = OFFSETS.map(([o]) => {
+    const v = at(o);
+    return '<div class="col"><div class="v">' + v + '%</div><div class="b" style="height:' + v * 1.2 + 'px;background:' + LV[lvlIdx(v)].c + '"></div></div>';
   }).join("");
-  $("labels").innerHTML=T.map(([t])=>"<div>"+t+"</div>").join("");
-  const n=Math.round(rain/80*6);
-  const pos=[[120,170],[260,120],[170,80],[300,200],[90,100],[230,220]];
-  $("cells").innerHTML=pos.slice(0,n).map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="26" fill-opacity=".28"/>').join("");
+  $("labels").innerHTML = OFFSETS.map(([, t]) => "<div>" + t + "</div>").join("");
+
+  if (idx >= 2 && idx > lastLvl) {
+    notify("🌧️ FAST แจ้งเตือน: " + L.name, "ความเสี่ยงน้ำท่วม " + risk + "% บริเวณ " + (loc.name || "ตำแหน่งของคุณ"));
+  }
+  lastLvl = idx;
 }
-function tick(){
-  const d=new Date();
-  $("clock").textContent="อัปเดตล่าสุด "+d.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"});
+
+/* ---------- การแจ้งเตือน ---------- */
+async function enableNotify() {
+  if (!("Notification" in window)) { say("เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน"); return; }
+  const p = await Notification.requestPermission();
+  say(p === "granted" ? "เปิดการแจ้งเตือนแล้ว ✓ (ต้องเปิดหน้านี้ค้างไว้)" : "ยังไม่ได้อนุญาตการแจ้งเตือน");
 }
-$("rain").oninput=render;$("water").oninput=render;
-$("theme").onclick=()=>{
-  const r=document.documentElement,dark=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0a1420";
-  r.setAttribute("data-theme",dark?"light":"dark");
+function notify(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") new Notification(title, { body });
+}
+
+/* ---------- เริ่มทำงาน ---------- */
+$("gps").onclick = useGPS;
+$("notify").onclick = enableNotify;
+$("setLoc").onclick = () => {
+  const lat = parseFloat($("lat").value), lon = parseFloat($("lon").value);
+  if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) { say("พิกัดไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง"); return; }
+  setLocation(lat, lon);
 };
-tick();setInterval(tick,30000);render();
+$("theme").onclick = () => {
+  const r = document.documentElement;
+  const dark = getComputedStyle(r).getPropertyValue("--bg").trim() === "#0a1420";
+  r.setAttribute("data-theme", dark ? "light" : "dark");
+};
+
+tickClock();
+setInterval(tickClock, 1000);
+showLocation();
+if (!loc.name) lookupName();
+refresh();
+setInterval(refresh, 10 * 60 * 1000);
 </script>
 </body>
 </html>

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FAST - Flood Alert System & Tracking</title>
+<link rel="manifest" href="manifest.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -100,6 +101,8 @@ select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid 
         <button class="pri" id="gps" type="button">📍 ใช้ตำแหน่งปัจจุบัน (GPS)</button>
         <button id="alarmBtn" type="button">🔔 เปิดระบบ Alarm</button>
         <button id="testAlarm" type="button">🔊 ทดสอบเสียงเร็ว</button>
+        <button id="pushBtn" type="button">📲 รับแจ้งเตือนบนเครื่องนี้ (Push)</button>
+        <button id="testPush" type="button">📨 ส่ง Push ทดสอบ</button>
         <button id="theme" type="button">◐ โหมดสี</button>
       </div>
       <div class="coords">
@@ -107,6 +110,7 @@ select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid 
         <div><label for="lon">ลองจิจูด</label><input id="lon" type="number" step="any" min="-180" max="180"></div>
         <button id="setLoc" type="button">ตั้งค่า</button>
       </div>
+      <div class="msg" id="pushState"></div>
       <div class="msg" id="alarmState"></div>
       <div class="msg" id="msg" aria-live="polite"></div>
     </section>
@@ -234,12 +238,13 @@ async function lookupName() {
     const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=th&lat=" + loc.lat + "&lon=" + loc.lon);
     const a = (await r.json()).address || {};
     const parts = [a.suburb || a.village || a.neighbourhood, a.town || a.city || a.county || a.state_district, a.state].filter(Boolean);
-    if (parts.length) { loc.name = parts.join(", "); saveLoc(); showLocation(); }
+    if (parts.length) { loc.name = parts.join(", "); saveLoc(); showLocation(); if (pushId) syncPush().catch(() => {}); }
   } catch (e) { /* ใช้พิกัดแทนชื่อสถานที่ */ }
 }
 
 function setLocation(lat, lon, acc) {
   loc = { lat, lon, acc, name: null };
+  if (pushId) syncPush().catch(() => {});
   saveLoc();
   showLocation();
   lookupName();
@@ -417,13 +422,13 @@ function stopSiren() {
   document.title = baseTitle;
 }
 
-function fireAlarm(title, text) {
+function fireAlarm(title, text, noNotify) {
   lastAlarm = Date.now();
   $("alarmTitle").textContent = title;
   $("alarmText").textContent = text;
   $("alarm").classList.add("on");
   startSiren();
-  if ("Notification" in window && Notification.permission === "granted") {
+  if (!noNotify && "Notification" in window && Notification.permission === "granted") {
     try { new Notification("🚨 " + title, { body: text, requireInteraction: true, tag: "fast-alarm", renotify: true }); } catch (e) {}
   }
 }
@@ -493,6 +498,89 @@ function stopSim() {
   refresh();
 }
 
+/* ---------- Web Push (เตือนแม้ปิดหน้าเว็บ) ---------- */
+const PUSH_URL = "";       // URL ของ Worker เช่น https://fast-flood-push.ชื่อคุณ.workers.dev
+const VAPID_PUBLIC = "";   // ค่า VAPID_PUBLIC จาก gen-vapid.js
+let pushId = null;
+const pstate = t => { $("pushState").textContent = t; };
+const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const u8 = s => Uint8Array.from(atob((s + "=".repeat((4 - s.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+function refreshPushUi(on) { $("pushBtn").textContent = on ? "📴 ปิดรับ Push บนเครื่องนี้" : "📲 รับแจ้งเตือนบนเครื่องนี้ (Push)"; }
+
+async function post(path, body) {
+  const r = await fetch(PUSH_URL + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+/* ส่ง subscription และตำแหน่งปัจจุบันให้ Worker (ตำแหน่งเปลี่ยนก็ส่งใหม่) */
+async function syncPush(sub) {
+  if (!loc) return;
+  sub = sub || await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+  if (!sub) return;
+  const r = await post("/subscribe", { subscription: sub.toJSON(), lat: loc.lat, lon: loc.lon, place: loc.name || "" });
+  pushId = r.id;
+  try { localStorage.setItem("fast_pid", pushId); } catch (e) {}
+  (await caches.open("fast")).put("/fast-cfg", new Response(JSON.stringify({ url: PUSH_URL, id: pushId })));
+}
+function pushReady() {
+  if (!PUSH_URL || !VAPID_PUBLIC) { pstate("ยังไม่ได้ตั้งค่า PUSH_URL และ VAPID_PUBLIC ในโค้ด (ดูคู่มือ)"); return false; }
+  if (!pushSupported()) { pstate("เบราว์เซอร์นี้ไม่รองรับ Web Push (iPhone ต้องเพิ่มไปยังหน้าจอโฮมก่อน)"); return false; }
+  if (location.protocol === "file:") { pstate("Web Push ต้องเปิดผ่าน https:// หรือ localhost ไม่ใช่เปิดไฟล์ตรงๆ"); return false; }
+  return true;
+}
+async function togglePush() {
+  if (!pushReady()) return;
+  try {
+    const reg = await navigator.serviceWorker.register("sw.js");
+    await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      await post("/unsubscribe", { endpoint: sub.endpoint }).catch(() => {});
+      await sub.unsubscribe();
+      pushId = null; refreshPushUi(false);
+      pstate("ปิดรับ Push บนเครื่องนี้แล้ว");
+      return;
+    }
+    if (await Notification.requestPermission() !== "granted") { pstate("ยังไม่ได้อนุญาตการแจ้งเตือน"); return; }
+    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: u8(VAPID_PUBLIC) });
+    await syncPush(sub);
+    refreshPushUi(true);
+    pstate("เปิดรับ Push แล้ว ✓ จะเตือนแม้ปิดหน้าเว็บ ตามตำแหน่ง: " + (loc ? (loc.name || "พิกัดปัจจุบัน") : "รอตำแหน่ง"));
+  } catch (e) { console.error(e); pstate("ตั้งค่า Push ไม่สำเร็จ: " + e.message); }
+}
+async function testPush() {
+  if (!pushId) { pstate("กด “รับแจ้งเตือนบนเครื่องนี้” ก่อน"); return; }
+  try { await post("/test-me", { id: pushId }); pstate("ส่ง Push ทดสอบแล้ว รอสักครู่ (ลองปิดแท็บนี้ดูก็ได้)"); }
+  catch (e) { pstate(e.message === "429" ? "รอ 30 วินาทีก่อนทดสอบอีกครั้ง" : "ส่งทดสอบไม่สำเร็จ: " + e.message); }
+}
+/* กดแจ้งเตือนแล้วเปิดหน้าเว็บ: ขึ้นหน้าจอแดง แตะหน้าจอเพื่อเปิดเสียงไซเรน */
+async function showPushAlarm() {
+  let t = { title: "แจ้งเตือนจาก FAST", body: "ตรวจสอบสถานการณ์ด้านล่าง" };
+  try {
+    const id = pushId || localStorage.getItem("fast_pid");
+    if (PUSH_URL && id) { const r = await fetch(PUSH_URL + "/alert?id=" + id); if (r.ok) t = await r.json(); }
+  } catch (e) {}
+  fireAlarm(t.title, t.body + " (แตะหน้าจอเพื่อเปิดเสียง)", true);
+}
+async function initPush() {
+  if (!PUSH_URL || !VAPID_PUBLIC || !pushSupported() || location.protocol === "file:") {
+    pstate(PUSH_URL && VAPID_PUBLIC ? "" : "Push ยังไม่ได้ตั้งค่า (ดูคู่มือ)");
+    return;
+  }
+  navigator.serviceWorker.addEventListener("message", e => { if (e.data && e.data.alarm) showPushAlarm(); });
+  try {
+    const reg = await navigator.serviceWorker.register("sw.js");
+    await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      try { pushId = localStorage.getItem("fast_pid"); } catch (e) {}
+      refreshPushUi(true);
+      pstate("Push เปิดอยู่บนเครื่องนี้ ✓");
+      syncPush(sub).catch(() => {});
+    }
+  } catch (e) { console.error(e); }
+}
+
 /* ---------- เริ่มทำงาน ---------- */
 $("gps").onclick = startAuto;
 $("alarmBtn").onclick = toggleAlarm;
@@ -500,6 +588,13 @@ $("testAlarm").onclick = testAlarm;
 $("alarmOk").onclick = ackAlarm;
 $("simStart").onclick = startSim;
 $("simStop").onclick = stopSim;
+$("pushBtn").onclick = togglePush;
+$("testPush").onclick = testPush;
+$("alarm").addEventListener("pointerdown", () => {
+  if (!$("alarm").classList.contains("on") || siren) return;
+  audioReady();
+  if (ctx) ctx.resume().then(() => { if (!siren && $("alarm").classList.contains("on")) startSiren(); });
+});
 $("setLoc").onclick = () => {
   const lat = parseFloat($("lat").value), lon = parseFloat($("lon").value);
   if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) { say("พิกัดไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง"); return; }
@@ -529,6 +624,8 @@ showLocation();
 if (loc) refresh();
 if (mode === "auto") startAuto();
 setInterval(refresh, 10 * 60 * 1000);
+initPush();
+if (new URLSearchParams(location.search).has("alarm")) showPushAlarm();
 </script>
 </body>
 </html>

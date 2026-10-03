@@ -1,400 +1,195 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flood Alarm System</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            background: #0b1220;
-            color: white;
-            min-height: 100vh;
-        }
-
-        .header {
-            padding: 25px 7%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #263247;
-        }
-
-        .logo {
-            font-size: 25px;
-            font-weight: bold;
-        }
-
-        .status {
-            background: #123c2a;
-            color: #55e69a;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-
-        .container {
-            width: 86%;
-            max-width: 1200px;
-            margin: 35px auto;
-        }
-
-        .location {
-            margin-bottom: 25px;
-        }
-
-        .location h1 {
-            font-size: 32px;
-            margin-bottom: 8px;
-        }
-
-        .location p {
-            color: #9ba8bc;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1.3fr 1fr;
-            gap: 20px;
-        }
-
-        .card {
-            background: #121b2b;
-            border: 1px solid #263247;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .card-title {
-            color: #9ba8bc;
-            margin-bottom: 15px;
-            font-size: 15px;
-        }
-
-        .risk {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .risk-number {
-            font-size: 70px;
-            font-weight: bold;
-            color: #ffd166;
-        }
-
-        .risk-text {
-            font-size: 24px;
-            color: #ffd166;
-        }
-
-        .risk-description {
-            color: #9ba8bc;
-            margin-top: 8px;
-        }
-
-        .weather {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .weather-item {
-            background: #0d1625;
-            padding: 20px;
-            border-radius: 15px;
-        }
-
-        .weather-icon {
-            font-size: 30px;
-            margin-bottom: 10px;
-        }
-
-        .weather-value {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .weather-label {
-            color: #8f9caf;
-            font-size: 13px;
-            margin-top: 5px;
-        }
-
-        .forecast {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .forecast-item {
-            text-align: center;
-            background: #0d1625;
-            padding: 15px 5px;
-            border-radius: 12px;
-        }
-
-        .forecast-time {
-            color: #8f9caf;
-            font-size: 13px;
-        }
-
-        .forecast-risk {
-            font-size: 22px;
-            font-weight: bold;
-            margin-top: 8px;
-        }
-
-        .map {
-            height: 300px;
-            background:
-                linear-gradient(rgba(20,35,55,.8), rgba(20,35,55,.8)),
-                repeating-linear-gradient(
-                    45deg,
-                    #17263a,
-                    #17263a 10px,
-                    #1b2d43 10px,
-                    #1b2d43 20px
-                );
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .circle {
-            width: 220px;
-            height: 220px;
-            border: 2px solid #4dabf7;
-            border-radius: 50%;
-            background: rgba(77,171,247,.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .home {
-            width: 18px;
-            height: 18px;
-            background: #ff595e;
-            border-radius: 50%;
-            box-shadow: 0 0 20px #ff595e;
-        }
-
-        .map-label {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
-            color: #9ba8bc;
-            font-size: 13px;
-        }
-
-        .alert {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            background: #332b13;
-            border: 1px solid #6b5a22;
-        }
-
-        .alert-title {
-            color: #ffd166;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 7px;
-        }
-
-        .alert p {
-            color: #c8c1a7;
-        }
-
-        .footer {
-            text-align: center;
-            color: #647188;
-            margin: 40px 0 20px;
-            font-size: 13px;
-        }
-
-        @media (max-width: 800px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .weather {
-                grid-template-columns: 1fr;
-            }
-
-            .forecast {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .risk-number {
-                font-size: 55px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flood Alarm | ระบบเฝ้าระวังน้ำท่วม</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3f7;--panel:#fff;--panel2:#e6edf3;--line:#d3dde6;--text:#10202e;--mute:#58697a;
+  --water:#0a7bb8;--ok:#1f9d63;--warn:#c98a00;--high:#d9622b;--crit:#d3303a;--lvl:var(--warn);
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1420;--panel:#112031;--panel2:#0b1826;--line:#223a52;--text:#e8f1f8;--mute:#8da3b8;
+  --water:#4cb4ec;--ok:#4cd68f;--warn:#f2c14e;--high:#ff8a4c;--crit:#ff5d66}}
+:root[data-theme="dark"]{
+  --bg:#0a1420;--panel:#112031;--panel2:#0b1826;--line:#223a52;--text:#e8f1f8;--mute:#8da3b8;
+  --water:#4cb4ec;--ok:#4cd68f;--warn:#f2c14e;--high:#ff8a4c;--crit:#ff5d66}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",Tahoma,sans-serif;line-height:1.6;min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 5% 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+h1{font-size:1.5rem;font-weight:700}
+.sub{color:var(--mute);font-size:.9rem}
+.live{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--mute)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+button{font:inherit;cursor:pointer;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.banner{border-radius:14px;padding:20px 24px;background:var(--panel);border:1px solid var(--line);border-left:8px solid var(--lvl);display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;margin-bottom:18px}
+.gauge{width:190px;position:relative}
+.gauge svg{width:100%;display:block}
+.gnum{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:2.4rem;font-weight:700;line-height:1;color:var(--lvl)}
+.gnum small{font-size:1rem}
+.lvl{font-size:1.5rem;font-weight:700;color:var(--lvl)}
+.banner ul{margin:10px 0 0 1.2rem;color:var(--text)}
+.banner li{margin:2px 0}
+.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--panel2);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:1.35rem}
+.stat span{color:var(--mute);font-size:.8rem}
+.ctrl{margin-top:16px}
+.ctrl label{display:flex;justify-content:space-between;font-size:.9rem;margin-top:10px}
+input[type=range]{width:100%;accent-color:var(--water)}
+.hint{color:var(--mute);font-size:.8rem;margin-top:10px}
+.map{background:var(--panel2);border-radius:10px;overflow:hidden}
+.map svg{display:block;width:100%;height:auto}
+.bars{display:flex;align-items:flex-end;gap:12px;height:170px;border-bottom:1px solid var(--line);padding-bottom:0}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.col .v{font-weight:600;font-size:.95rem;margin-bottom:4px}
+.col .b{width:100%;max-width:70px;border-radius:6px 6px 0 0;min-height:4px;transition:height .3s}
+.labels{display:flex;gap:12px;margin-top:6px}
+.labels div{flex:1;text-align:center;color:var(--mute);font-size:.8rem}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:.8rem;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
+@media (max-width:800px){
+  .grid{grid-template-columns:1fr}
+  .banner{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .banner ul{text-align:left}
+  .stats{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
 </head>
-
 <body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🌊 Flood Alarm</h1>
+      <div class="sub">เฝ้าระวังน้ำท่วมรัศมี 5 กม. จากบ้านของคุณ</div>
+    </div>
+    <div class="live">
+      <span class="dot"></span><span id="clock">อัปเดตล่าสุด --:--</span>
+      <button id="theme" type="button" aria-label="สลับโหมดสว่างหรือมืด">◐ โหมด</button>
+    </div>
+  </header>
 
-    <header class="header">
-        <div class="logo">🌊 Flood Alarm</div>
-        <div class="status">● ระบบออนไลน์</div>
-    </header>
+  <section class="banner" id="banner" aria-live="polite">
+    <div class="gauge">
+      <svg viewBox="0 0 200 110" aria-hidden="true">
+        <path d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>
+        <path id="arc" d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="var(--lvl)" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+      </svg>
+      <div class="gnum"><span id="num">0</span><small>%</small></div>
+    </div>
+    <div>
+      <div class="lvl" id="lvl"></div>
+      <div class="sub" id="lvlDesc"></div>
+      <ul id="acts"></ul>
+    </div>
+  </section>
 
-    <main class="container">
+  <div class="grid">
+    <section class="card">
+      <h2>สภาพปัจจุบัน</h2>
+      <div class="stats">
+        <div class="stat"><b id="sTemp">29°C</b><span>อุณหภูมิ</span></div>
+        <div class="stat"><b id="sRain">--</b><span>ฝน (มม./ชม.)</span></div>
+        <div class="stat"><b id="sWater">--</b><span>ระดับน้ำ (% ของตลิ่ง)</span></div>
+      </div>
+      <div class="ctrl">
+        <div class="sub">ลองจำลองสถานการณ์ เพื่อดูว่าระบบจะเตือนอย่างไร</div>
+        <label for="rain"><span>🌧️ ปริมาณฝน</span><b id="rainV"></b></label>
+        <input id="rain" type="range" min="0" max="80" value="15">
+        <label for="water"><span>💧 ระดับน้ำในคลอง</span><b id="waterV"></b></label>
+        <input id="water" type="range" min="0" max="100" value="55">
+        <div class="hint">ข้อมูลในหน้านี้เป็นข้อมูลตัวอย่าง ยังไม่เชื่อมต่อเซนเซอร์หรือสถานีวัดจริง</div>
+      </div>
+    </section>
 
-        <section class="location">
-            <h1>ระบบเฝ้าระวังน้ำท่วม</h1>
-            <p>พื้นที่เฝ้าระวังรัศมี 5 กิโลเมตรจากบ้าน</p>
-        </section>
+    <section class="card">
+      <h2>📍 พื้นที่เฝ้าระวัง</h2>
+      <div class="map">
+        <svg viewBox="0 0 400 300" role="img" aria-label="แผนที่รัศมี 5 กิโลเมตร มีบ้านอยู่ตรงกลางและคลองไหลผ่าน">
+          <g stroke="var(--line)" stroke-width="1"><path d="M0 100H400M0 200H400M133 0V300M266 0V300"/></g>
+          <path d="M-10 230 C80 200 120 120 210 140 S330 90 410 40" fill="none" stroke="var(--water)" stroke-width="9" opacity=".55" stroke-linecap="round"/>
+          <g id="cells" fill="var(--water)"></g>
+          <circle cx="200" cy="150" r="125" fill="var(--water)" fill-opacity=".07" stroke="var(--water)" stroke-width="2" stroke-dasharray="6 5"/>
+          <circle cx="200" cy="150" r="14" fill="var(--crit)" fill-opacity=".25"/>
+          <circle cx="200" cy="150" r="6" fill="var(--crit)"/>
+          <text x="214" y="146" font-size="13" fill="var(--text)" font-family="IBM Plex Sans Thai,sans-serif">บ้าน</text>
+          <text x="14" y="288" font-size="12" fill="var(--mute)" font-family="IBM Plex Sans Thai,sans-serif">เส้นประ = รัศมี 5 กม.</text>
+          <text x="300" y="86" font-size="12" fill="var(--water)" font-family="IBM Plex Sans Thai,sans-serif">คลอง</text>
+        </svg>
+      </div>
+    </section>
+  </div>
 
-        <div class="grid">
+  <section class="card">
+    <h2>📈 แนวโน้มความเสี่ยงใน 24 ชั่วโมง</h2>
+    <div class="bars" id="bars"></div>
+    <div class="labels" id="labels"></div>
+    <div class="legend">
+      <span><i style="background:var(--ok)"></i>ต่ำ ต่ำกว่า 25%</span>
+      <span><i style="background:var(--warn)"></i>เฝ้าระวัง 25–49%</span>
+      <span><i style="background:var(--high)"></i>สูง 50–74%</span>
+      <span><i style="background:var(--crit)"></i>วิกฤต 75% ขึ้นไป</span>
+    </div>
+  </section>
 
-            <!-- FLOOD RISK -->
-            <div class="card">
+  <footer>Flood Alarm System • ระบบต้นแบบ ไม่ใช้แทนประกาศทางการ</footer>
+</div>
 
-                <div class="card-title">
-                    🌊 ความเสี่ยงน้ำท่วม
-                </div>
+<script>
+const LV=[
+  {max:25,name:"ความเสี่ยงต่ำ",c:"var(--ok)",d:"สถานการณ์ปกติ",a:["ติดตามพยากรณ์อากาศตามปกติ"]},
+  {max:50,name:"เฝ้าระวัง",c:"var(--warn)",d:"ยังไม่พบสัญญาณน้ำท่วมรุนแรง แต่ควรติดตามฝนและระดับน้ำต่อเนื่อง",a:["ตรวจสอบทางระบายน้ำรอบบ้าน","ชาร์จโทรศัพท์และเตรียมไฟฉาย"]},
+  {max:75,name:"ความเสี่ยงสูง",c:"var(--high)",d:"มีโอกาสน้ำท่วมขังหรือน้ำล้นตลิ่ง ควรเตรียมรับมือ",a:["ยกของมีค่าและเอกสารขึ้นที่สูง","จอดรถบนพื้นที่สูง","เตรียมกระเป๋าฉุกเฉินและยา"]},
+  {max:101,name:"วิกฤต",c:"var(--crit)",d:"เสี่ยงน้ำท่วมรุนแรง ควรเตรียมอพยพทันที",a:["ปิดไฟและวาล์วแก๊สก่อนออกจากบ้าน","อพยพไปยังจุดปลอดภัยที่กำหนด","โทร 1784 (ปภ.) หรือ 191 หากต้องการความช่วยเหลือ"]}
+];
+const T=[["ตอนนี้",1],["+3 ชม.",1.2],["+6 ชม.",1.5],["+12 ชม.",1.3],["+24 ชม.",.8]];
+const $=id=>document.getElementById(id);
+const lvl=r=>LV.find(l=>r<l.max);
+const calc=(rain,w)=>Math.max(0,Math.min(99,Math.round(5+rain*.8+w*.35)));
 
-                <div class="risk">
-                    <div class="risk-number">35%</div>
-
-                    <div>
-                        <div class="risk-text">ความเสี่ยงปานกลาง</div>
-                        <div class="risk-description">
-                            ระบบกำลังติดตามสภาพอากาศและระดับน้ำ
-                        </div>
-                    </div>
-                </div>
-
-                <div class="alert">
-                    <div class="alert-title">
-                        ⚠️ เฝ้าระวัง
-                    </div>
-
-                    <p>
-                        ขณะนี้ยังไม่พบสัญญาณน้ำท่วมรุนแรง
-                        แต่ควรติดตามฝนและระดับน้ำอย่างต่อเนื่อง
-                    </p>
-                </div>
-
-            </div>
-
-
-            <!-- MAP -->
-            <div class="card">
-
-                <div class="card-title">
-                    📍 พื้นที่เฝ้าระวัง
-                </div>
-
-                <div class="map">
-
-                    <div class="circle">
-                        <div class="home"></div>
-                    </div>
-
-                    <div class="map-label">
-                        รัศมี 5 km
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- WEATHER -->
-        <div class="card" style="margin-top:20px">
-
-            <div class="card-title">
-                🌦️ สภาพอากาศปัจจุบัน
-            </div>
-
-            <div class="weather">
-
-                <div class="weather-item">
-                    <div class="weather-icon">🌡️</div>
-                    <div class="weather-value">--°C</div>
-                    <div class="weather-label">อุณหภูมิ</div>
-                </div>
-
-                <div class="weather-item">
-                    <div class="weather-icon">🌧️</div>
-                    <div class="weather-value">-- mm</div>
-                    <div class="weather-label">ฝนสะสม</div>
-                </div>
-
-                <div class="weather-item">
-                    <div class="weather-icon">💧</div>
-                    <div class="weather-value">--%</div>
-                    <div class="weather-label">ความชื้น</div>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- FORECAST -->
-        <div class="card" style="margin-top:20px">
-
-            <div class="card-title">
-                📈 แนวโน้มความเสี่ยงน้ำท่วม
-            </div>
-
-            <div class="forecast">
-
-                <div class="forecast-item">
-                    <div class="forecast-time">ตอนนี้</div>
-                    <div class="forecast-risk">35%</div>
-                </div>
-
-                <div class="forecast-item">
-                    <div class="forecast-time">+3 ชม.</div>
-                    <div class="forecast-risk">42%</div>
-                </div>
-
-                <div class="forecast-item">
-                    <div class="forecast-time">+6 ชม.</div>
-                    <div class="forecast-risk">55%</div>
-                </div>
-
-                <div class="forecast-item">
-                    <div class="forecast-time">+12 ชม.</div>
-                    <div class="forecast-risk">48%</div>
-                </div>
-
-                <div class="forecast-item">
-                    <div class="forecast-time">+24 ชม.</div>
-                    <div class="forecast-risk">30%</div>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="footer">
-            Flood Alarm System • ระบบต้นแบบ
-        </div>
-
-    </main>
-
+function render(){
+  const rain=+$("rain").value,w=+$("water").value,r=calc(rain,w),L=lvl(r);
+  document.documentElement.style.setProperty("--lvl",L.c);
+  $("num").textContent=r;
+  $("arc").setAttribute("stroke-dasharray",r+" 100");
+  $("lvl").textContent=L.name;
+  $("lvlDesc").textContent=L.d;
+  $("acts").innerHTML=L.a.map(a=>"<li>"+a+"</li>").join("");
+  $("rainV").textContent=rain+" มม./ชม.";
+  $("waterV").textContent=w+"%";
+  $("sRain").textContent=rain;
+  $("sWater").textContent=w+"%";
+  $("bars").innerHTML=T.map(([,f])=>{
+    const v=calc(Math.min(80,rain*f),Math.min(100,w*(f>1?1+(f-1)*.4:f>.9?1:.9)));
+    return '<div class="col"><div class="v">'+v+'%</div><div class="b" style="height:'+v*1.2+'px;background:'+lvl(v).c+'"></div></div>';
+  }).join("");
+  $("labels").innerHTML=T.map(([t])=>"<div>"+t+"</div>").join("");
+  const n=Math.round(rain/80*6);
+  const pos=[[120,170],[260,120],[170,80],[300,200],[90,100],[230,220]];
+  $("cells").innerHTML=pos.slice(0,n).map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="26" fill-opacity=".28"/>').join("");
+}
+function tick(){
+  const d=new Date();
+  $("clock").textContent="อัปเดตล่าสุด "+d.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"});
+}
+$("rain").oninput=render;$("water").oninput=render;
+$("theme").onclick=()=>{
+  const r=document.documentElement,dark=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0a1420";
+  r.setAttribute("data-theme",dark?"light":"dark");
+};
+tick();setInterval(tick,30000);render();
+</script>
 </body>
 </html>

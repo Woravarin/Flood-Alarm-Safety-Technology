@@ -144,9 +144,6 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
 </div>
 
 <script>
-/* ตำแหน่งเริ่มต้น (นครศรีธรรมราช) ใช้เมื่อยังไม่เคยเลือกตำแหน่ง */
-const DEFAULT_LOC = { lat: 8.4304, lon: 99.9631, name: "นครศรีธรรมราช" };
-
 const LV = [
   { max: 25,  name: "ความเสี่ยงต่ำ", c: "var(--ok)",   d: "สถานการณ์ปกติ", a: ["ติดตามพยากรณ์อากาศตามปกติ"] },
   { max: 50,  name: "เฝ้าระวัง",     c: "var(--warn)", d: "ยังไม่พบสัญญาณน้ำท่วมรุนแรง แต่ควรติดตามฝนต่อเนื่อง", a: ["ตรวจสอบทางระบายน้ำรอบบ้าน", "ชาร์จโทรศัพท์และเตรียมไฟฉาย"] },
@@ -157,12 +154,21 @@ const OFFSETS = [[0, "ตอนนี้"], [3, "+3 ชม."], [6, "+6 ชม."]
 
 const $ = id => document.getElementById(id);
 const lvlIdx = r => LV.findIndex(l => r < l.max);
-let loc = loadLoc() || { ...DEFAULT_LOC };
+let loc = null;      // ตำแหน่งที่ใช้อยู่ (ยังไม่มีจนกว่าจะได้ตำแหน่งเครื่อง)
+let mode = "auto";   // auto = ตามตำแหน่งเครื่อง, manual = กรอกพิกัดเอง
+let watchId = null;
 let lastLvl = -1;
 
-/* ---------- เก็บตำแหน่งไว้ในเครื่อง ---------- */
+/* ---------- เก็บตำแหน่งล่าสุดไว้ในเครื่อง ---------- */
 function loadLoc() { try { return JSON.parse(localStorage.getItem("fast_loc")); } catch (e) { return null; } }
-function saveLoc() { try { localStorage.setItem("fast_loc", JSON.stringify(loc)); } catch (e) {} }
+function saveLoc() {
+  if (!loc) return;
+  try { localStorage.setItem("fast_loc", JSON.stringify({ mode, lat: loc.lat, lon: loc.lon, name: loc.name })); } catch (e) {}
+}
+function distKm(a, b, c, d) {
+  const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
 function say(t) { $("msg").textContent = t; }
 
 /* ---------- นาฬิกาและวันที่ ---------- */
@@ -174,12 +180,17 @@ function tickClock() {
 
 /* ---------- แผนที่ ---------- */
 function showLocation() {
+  if (!loc) {
+    $("place").textContent = "ยังไม่ทราบตำแหน่ง";
+    $("coordText").textContent = "กด “ใช้ตำแหน่งปัจจุบัน” แล้วอนุญาตการเข้าถึงตำแหน่งในเบราว์เซอร์";
+    return;
+  }
   const { lat, lon } = loc, p = 0.05;
   $("map").src = "https://www.openstreetmap.org/export/embed.html?bbox=" +
     [lon - p, lat - p, lon + p, lat + p].join(",") + "&layer=mapnik&marker=" + lat + "," + lon;
   $("bigMap").href = "https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=14/" + lat + "/" + lon;
   $("place").textContent = loc.name || "ตำแหน่งของคุณ";
-  $("coordText").textContent = lat.toFixed(5) + ", " + lon.toFixed(5) + (loc.acc ? "  (ความแม่นยำ ±" + Math.round(loc.acc) + " ม.)" : "");
+  $("coordText").textContent = (mode === "auto" ? "ตามตำแหน่งเครื่อง: " : "ตั้งตำแหน่งเอง: ") + lat.toFixed(5) + ", " + lon.toFixed(5) + (loc.acc ? "  (ความแม่นยำ ±" + Math.round(loc.acc) + " ม.)" : "");
   $("lat").value = lat.toFixed(5);
   $("lon").value = lon.toFixed(5);
 }
@@ -201,16 +212,31 @@ function setLocation(lat, lon, acc) {
   refresh();
 }
 
-function useGPS() {
-  if (!navigator.geolocation) { say("เบราว์เซอร์นี้ไม่รองรับ GPS"); return; }
-  say("กำลังหาตำแหน่ง...");
-  navigator.geolocation.getCurrentPosition(
-    p => { setLocation(p.coords.latitude, p.coords.longitude, p.coords.accuracy); say("ใช้ตำแหน่งปัจจุบันแล้ว ✓"); },
-    e => say(e.code === 1 ? "ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง กรุณาอนุญาตในเบราว์เซอร์ หรือกรอกพิกัดเอง"
-           : e.code === 3 ? "หาตำแหน่งไม่ทันเวลา ลองใหม่อีกครั้ง"
-           : "หาตำแหน่งไม่ได้ (GPS ต้องใช้ผ่าน https หรือ localhost)"),
-    { enableHighAccuracy: true, timeout: 15000 }
-  );
+/* ตามตำแหน่งของเครื่องอัตโนมัติ: เครื่องอยู่ที่ไหนก็ใช้ตำแหน่งนั้น และอัปเดตเมื่อเคลื่อนที่เกิน 0.5 กม. */
+function startAuto() {
+  mode = "auto";
+  if (!navigator.geolocation) { say("เบราว์เซอร์นี้ไม่รองรับ GPS กรุณากรอกพิกัดเอง"); return; }
+  if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+  say("กำลังหาตำแหน่งปัจจุบันของเครื่อง...");
+  watchId = navigator.geolocation.watchPosition(onPos, onGeoError,
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+}
+function stopAuto() {
+  if (watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
+  watchId = null;
+}
+function onPos(p) {
+  const { latitude: lat, longitude: lon, accuracy: acc } = p.coords;
+  if (!loc || distKm(loc.lat, loc.lon, lat, lon) > 0.5) setLocation(lat, lon, acc);
+  else { loc.acc = acc; showLocation(); }
+  say("ใช้ตำแหน่งปัจจุบันของเครื่อง ✓");
+}
+function onGeoError(e) {
+  if (e.code === 1) {
+    stopAuto();
+    say("ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง กรุณาอนุญาตในเบราว์เซอร์ (ไอคอนกุญแจข้าง URL) หรือกรอกพิกัดเอง");
+  } else if (e.code === 3) say("หาตำแหน่งไม่ทันเวลา ระบบจะลองใหม่เรื่อยๆ");
+  else say("หาตำแหน่งไม่ได้ (GPS ต้องใช้ผ่าน https หรือ localhost)");
 }
 
 /* ---------- คำนวณความเสี่ยง ---------- */
@@ -224,6 +250,7 @@ function score(rate, accum, prob) {
 
 /* ---------- ดึงข้อมูลอากาศ ---------- */
 async function refresh() {
+  if (!loc) return;
   say("กำลังตรวจสอบสภาพอากาศ...");
   try {
     const url = "https://api.open-meteo.com/v1/forecast?latitude=" + loc.lat + "&longitude=" + loc.lon +
@@ -287,12 +314,15 @@ function notify(title, body) {
 }
 
 /* ---------- เริ่มทำงาน ---------- */
-$("gps").onclick = useGPS;
+$("gps").onclick = startAuto;
 $("notify").onclick = enableNotify;
 $("setLoc").onclick = () => {
   const lat = parseFloat($("lat").value), lon = parseFloat($("lon").value);
   if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) { say("พิกัดไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง"); return; }
+  stopAuto();
+  mode = "manual";
   setLocation(lat, lon);
+  say("ใช้พิกัดที่กรอกเอง กด “ใช้ตำแหน่งปัจจุบัน” เพื่อกลับไปตามเครื่อง");
 };
 $("theme").onclick = () => {
   const r = document.documentElement;
@@ -302,9 +332,15 @@ $("theme").onclick = () => {
 
 tickClock();
 setInterval(tickClock, 1000);
+const saved = loadLoc();
+if (saved && typeof saved.lat === "number") {
+  /* มีตำแหน่งล่าสุดเก็บไว้: ใช้แสดงผลไปก่อนระหว่างรอ GPS (ถ้าเป็นโหมดตั้งเอง จะใช้ค่านี้ต่อ) */
+  loc = { lat: saved.lat, lon: saved.lon, name: saved.name };
+  mode = saved.mode === "manual" ? "manual" : "auto";
+}
 showLocation();
-if (!loc.name) lookupName();
-refresh();
+if (loc) refresh();
+if (mode === "auto") startAuto();
 setInterval(refresh, 10 * 60 * 1000);
 </script>
 </body>

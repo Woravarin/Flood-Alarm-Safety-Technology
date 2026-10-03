@@ -1,226 +1,400 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Noti Trip</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Mali&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flood Alarm System</title>
 
-    body {
-      margin: 0;
-      font-family: 'Mali', cursive;
-      background: linear-gradient(to bottom right, #f9fbe7, #fffde7);
-      color: #333;
-    }
-    header {
-      background-color: #ffe082;
-      padding: 1rem;
-      text-align: center;
-      animation: fadeInDown 1s ease-out forwards;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2.2rem;
-      color: #4e342e;
-    }
-    .greeting {
-      font-size: 1.7rem;
-      text-align: center;
-      margin: 2rem 0;
-      opacity: 0;
-      animation: fadeIn 1s forwards;
-    }
-    .menu {
-      display: none;
-      text-align: center;
-      margin: 2rem 0;
-      opacity: 0;
-      animation: fadeInUp 1s ease-out forwards;
-      animation-delay: 3s;
-    }
-    .menu button {
-      font-size: 1.3rem;
-      margin: 0.5rem;
-      padding: 0.8rem 1.5rem;
-      background-color: #ffd54f;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.2s, background-color 0.3s;
-    }
-    .menu button:hover {
-      background-color: #ffca28;
-      transform: scale(1.05);
-    }
-    .section {
-      display: none;
-      max-width: 900px;
-      margin: auto;
-      padding: 1rem;
-      opacity: 0;
-      animation: fadeIn 0.8s ease-in forwards;
-    }
-    .card {
-      background-color: #fff8e1;
-      border: 1px solid #ffe082;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-    }
-    .card h2 {
-      margin-top: 0;
-      color: #6d4c41;
-    }
-    .card img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-bottom: 0.5rem;
-      transition: transform 0.3s ease;
-    }
-    .card img:hover {
-      transform: scale(1.02);
-    }
-    .card p {
-      margin: 0.3rem 0;
-    }
-    .card a {
-      display: inline-block;
-      margin-top: 0.5rem;
-      color: #33691e;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-      color: #777;
-    }
-    .back-button {
-      display: block;
-      margin: 1rem auto;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      background-color: #ffe082;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #0b1220;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 25px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #263247;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .status {
+            background: #123c2a;
+            color: #55e69a;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            width: 86%;
+            max-width: 1200px;
+            margin: 35px auto;
+        }
+
+        .location {
+            margin-bottom: 25px;
+        }
+
+        .location h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .location p {
+            color: #9ba8bc;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: #121b2b;
+            border: 1px solid #263247;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card-title {
+            color: #9ba8bc;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .risk {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .risk-number {
+            font-size: 70px;
+            font-weight: bold;
+            color: #ffd166;
+        }
+
+        .risk-text {
+            font-size: 24px;
+            color: #ffd166;
+        }
+
+        .risk-description {
+            color: #9ba8bc;
+            margin-top: 8px;
+        }
+
+        .weather {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .weather-item {
+            background: #0d1625;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .weather-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .weather-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .weather-label {
+            color: #8f9caf;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .forecast {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .forecast-item {
+            text-align: center;
+            background: #0d1625;
+            padding: 15px 5px;
+            border-radius: 12px;
+        }
+
+        .forecast-time {
+            color: #8f9caf;
+            font-size: 13px;
+        }
+
+        .forecast-risk {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .map {
+            height: 300px;
+            background:
+                linear-gradient(rgba(20,35,55,.8), rgba(20,35,55,.8)),
+                repeating-linear-gradient(
+                    45deg,
+                    #17263a,
+                    #17263a 10px,
+                    #1b2d43 10px,
+                    #1b2d43 20px
+                );
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .circle {
+            width: 220px;
+            height: 220px;
+            border: 2px solid #4dabf7;
+            border-radius: 50%;
+            background: rgba(77,171,247,.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .home {
+            width: 18px;
+            height: 18px;
+            background: #ff595e;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #ff595e;
+        }
+
+        .map-label {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            color: #9ba8bc;
+            font-size: 13px;
+        }
+
+        .alert {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            background: #332b13;
+            border: 1px solid #6b5a22;
+        }
+
+        .alert-title {
+            color: #ffd166;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .alert p {
+            color: #c8c1a7;
+        }
+
+        .footer {
+            text-align: center;
+            color: #647188;
+            margin: 40px 0 20px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 800px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .weather {
+                grid-template-columns: 1fr;
+            }
+
+            .forecast {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .risk-number {
+                font-size: 55px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <header>
-    <h1>Noti Trip</h1>
-    <p>Notification for your trip in Trang, Thailand</p>
-  </header>
-  <div class="greeting" id="greeting"></div>
-  <div class="menu" id="menu">
-    <p>คุณต้องการไปที่ไหนก่อน?</p>
-    <button onclick="showSection('food')">🍽 ร้านอาหาร</button>
-    <button onclick="showSection('travel')">📍 ที่เที่ยว</button>
-    <button onclick="showSection('hotel')">🏨 ที่พัก</button>
-  </div>
-  <div class="section" id="food">
-    <button class="back-button" onclick="backToMenu()">🔙 กลับเมนูหลัก</button>
-    <p style="text-align:center;color:#aaa;">กรุณาติดต่อเพื่อแสดงร้านอาหาร</p>
-  </div>
-  <div class="section" id="travel">
-    <button class="back-button" onclick="backToMenu()">🔙 กลับเมนูหลัก</button>
-    <button onclick="getLocation()" style="margin-bottom:1rem;">📍 ใช้ตำแหน่งของคุณ</button>
-    <div id="geo-info"></div>
-    <div class="card">
-      <h2>เกาะกระดาน</h2>
-      <img src="https://www.trangsea.com/wp-content/uploads/2020/03/koh-kradan-trang.jpg" alt="เกาะกระดาน" />
-      <p>เกาะสวรรค์น้ำใส หาดทรายขาว มีแนวปะการังสวยงาม</p>
-      <a id="https://www.google.com/maps/place/7%C2%B018'51.0%22N+99%C2%B015'13.5%22E/@7.31416,99.2488901,17z/data=!3m1!4b1!4m12!1m7!3m6!1s0x304dde417a81863f:0xbaf10613aecd3f6d!2z4LmA4LiB4Liy4Liw4LiB4Lij4Liw4LiU4Liy4LiZ!8m2!3d7.314398!4d99.2522292!16s%2Fg%2F1222cq4h!3m3!8m2!3d7.31416!4d99.253761?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D="_blank">📍 ดูใน Google Maps</a>
-    </div>
-  </div>
-  <div class="section" id="hotel">
-    <button class="back-button" onclick="backToMenu()">🔙 กลับเมนูหลัก</button>
-    <p style="text-align:center;color:#aaa;">กรุณาติดต่อเพื่อแสดงโรงแรม</p>
-  </div>
-  <footer>&copy; 2025 Noti Trip | Developed by Kim</footer>
-  <script>
-    const greetingEl = document.getElementById('greeting');
-    const menuEl = document.getElementById('menu');
-    const now = new Date();
-    const hour = now.getHours();
-    let greeting = 'สวัสดี';
-    if (hour >= 5 && hour < 11) greeting = 'สวัสดีตอนเช้า 🌤';
-    else if (hour >= 11 && hour < 15) greeting = 'สวัสดีตอนเที่ยง ☀️';
-    else if (hour >= 15 && hour < 18) greeting = 'สวัสดีตอนบ่าย 🌥';
-    else greeting = 'สวัสดีตอนค่ำ 🌙';
-    greetingEl.innerText = greeting;
-    setTimeout(() => {
-      greetingEl.style.opacity = '0';
-      setTimeout(() => {
-        greetingEl.style.display = 'none';
-        menuEl.style.opacity = '1';
-        menuEl.style.display = 'block';
-      }, 1000);
-    }, 3000);
 
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(el => {
-        el.style.display = 'none';
-        el.style.opacity = '0';
-      });
-      const selected = document.getElementById(id);
-      selected.style.display = 'block';
-      setTimeout(() => selected.style.opacity = '1', 100);
-      menuEl.style.display = 'none';
-    }
+    <header class="header">
+        <div class="logo">🌊 Flood Alarm</div>
+        <div class="status">● ระบบออนไลน์</div>
+    </header>
 
-    function backToMenu() {
-      document.querySelectorAll('.section').forEach(el => {
-        el.style.display = 'none';
-        el.style.opacity = '0';
-      });
-      menuEl.style.display = 'block';
-      setTimeout(() => menuEl.style.opacity = '1', 100);
-    }
+    <main class="container">
 
-    function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(successLocation, errorLocation);
-      } else {
-        alert("เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง");
-      }
-    }
+        <section class="location">
+            <h1>ระบบเฝ้าระวังน้ำท่วม</h1>
+            <p>พื้นที่เฝ้าระวังรัศมี 5 กิโลเมตรจากบ้าน</p>
+        </section>
 
-    function successLocation(position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const geoInfo = document.getElementById('geo-info');
-      geoInfo.innerHTML = `<p style="color:#2e7d32;font-weight:bold;">🧭 กำลังแสดงสถานที่ท่องเที่ยวใกล้คุณ (${lat.toFixed(4)}, ${lon.toFixed(4)})</p>`;
+        <div class="grid">
 
-      const mapLink = document.getElementById('map-link');
-      mapLink.href = `https://www.google.com/maps/dir/?api=1&destination=7.311,99.144&origin=${lat},${lon}`;
-    }
+            <!-- FLOOD RISK -->
+            <div class="card">
 
-    function errorLocation(error) {
-      const geoInfo = document.getElementById('geo-info');
-      geoInfo.innerHTML = `<p style="color:red;">❌ ไม่สามารถระบุตำแหน่ง: ${error.message}</p>`;
-    }
-  </script>
+                <div class="card-title">
+                    🌊 ความเสี่ยงน้ำท่วม
+                </div>
+
+                <div class="risk">
+                    <div class="risk-number">35%</div>
+
+                    <div>
+                        <div class="risk-text">ความเสี่ยงปานกลาง</div>
+                        <div class="risk-description">
+                            ระบบกำลังติดตามสภาพอากาศและระดับน้ำ
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">
+                        ⚠️ เฝ้าระวัง
+                    </div>
+
+                    <p>
+                        ขณะนี้ยังไม่พบสัญญาณน้ำท่วมรุนแรง
+                        แต่ควรติดตามฝนและระดับน้ำอย่างต่อเนื่อง
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- MAP -->
+            <div class="card">
+
+                <div class="card-title">
+                    📍 พื้นที่เฝ้าระวัง
+                </div>
+
+                <div class="map">
+
+                    <div class="circle">
+                        <div class="home"></div>
+                    </div>
+
+                    <div class="map-label">
+                        รัศมี 5 km
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- WEATHER -->
+        <div class="card" style="margin-top:20px">
+
+            <div class="card-title">
+                🌦️ สภาพอากาศปัจจุบัน
+            </div>
+
+            <div class="weather">
+
+                <div class="weather-item">
+                    <div class="weather-icon">🌡️</div>
+                    <div class="weather-value">--°C</div>
+                    <div class="weather-label">อุณหภูมิ</div>
+                </div>
+
+                <div class="weather-item">
+                    <div class="weather-icon">🌧️</div>
+                    <div class="weather-value">-- mm</div>
+                    <div class="weather-label">ฝนสะสม</div>
+                </div>
+
+                <div class="weather-item">
+                    <div class="weather-icon">💧</div>
+                    <div class="weather-value">--%</div>
+                    <div class="weather-label">ความชื้น</div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FORECAST -->
+        <div class="card" style="margin-top:20px">
+
+            <div class="card-title">
+                📈 แนวโน้มความเสี่ยงน้ำท่วม
+            </div>
+
+            <div class="forecast">
+
+                <div class="forecast-item">
+                    <div class="forecast-time">ตอนนี้</div>
+                    <div class="forecast-risk">35%</div>
+                </div>
+
+                <div class="forecast-item">
+                    <div class="forecast-time">+3 ชม.</div>
+                    <div class="forecast-risk">42%</div>
+                </div>
+
+                <div class="forecast-item">
+                    <div class="forecast-time">+6 ชม.</div>
+                    <div class="forecast-risk">55%</div>
+                </div>
+
+                <div class="forecast-item">
+                    <div class="forecast-time">+12 ชม.</div>
+                    <div class="forecast-risk">48%</div>
+                </div>
+
+                <div class="forecast-item">
+                    <div class="forecast-time">+24 ชม.</div>
+                    <div class="forecast-risk">30%</div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer">
+            Flood Alarm System • ระบบต้นแบบ
+        </div>
+
+    </main>
+
 </body>
 </html>
-

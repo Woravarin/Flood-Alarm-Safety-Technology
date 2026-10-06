@@ -460,12 +460,30 @@ const RAMP = [
   [0, [46, 204, 113, 0.10]], [25, [46, 204, 113, 0.30]], [45, [250, 204, 21, 0.50]],
   [60, [251, 146, 60, 0.62]], [80, [239, 68, 68, 0.72]], [100, [190, 18, 60, 0.82]]
 ];
-let rm = null, rmTiles = null, rmHeat = null, rmHome = null, rmRing = null, rmCenter = null;
+let rm = null, rmTiles = null, rmLabels = null, rmHeat = null, rmHome = null, rmRing = null, rmCenter = null;
 let rmData = null, rmHour = 0, rmTimer = null;
 
 const isDark = () => getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() === "#0a1420";
-const tileUrl = () => "https://{s}.basemaps.cartocdn.com/" + (isDark() ? "dark_all" : "light_all") + "/{z}/{x}/{y}{r}.png";
-function rmTheme() { if (rmTiles) rmTiles.setUrl(tileUrl()); }
+/* แหล่งภาพแผนที่: CARTO เริ่มบังคับใช้ API key (ไม่มีคีย์จะมีลายน้ำ "API KEY REQUIRED")
+   จึงใช้ Esri Gray Canvas ที่ไม่ต้องมีคีย์เป็นค่าเริ่มต้น
+   ถ้าขอคีย์ฟรีที่ https://www.carto.com/basemaps/apikey/ แล้วใส่ใน CARTO_KEY จะใช้แผนที่ CARTO แทน */
+const CARTO_KEY = "";
+function tileSpec() {
+  const dark = isDark();
+  if (CARTO_KEY) {
+    const b = "https://{s}.basemaps.cartocdn.com/" + (dark ? "dark" : "light") + "_";
+    const q = "/{z}/{x}/{y}{r}.png?key=" + encodeURIComponent(CARTO_KEY);
+    return { base: b + "nolabels" + q, labels: b + "only_labels" + q, sub: "abcd", max: 18, attr: "© OpenStreetMap © CARTO" };
+  }
+  const e = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_" + (dark ? "Dark" : "Light") + "_Gray_";
+  return { base: e + "Base/MapServer/tile/{z}/{y}/{x}", labels: e + "Reference/MapServer/tile/{z}/{y}/{x}", sub: "abc", max: 16, attr: "Tiles © Esri, © OpenStreetMap contributors" };
+}
+function rmTheme() {
+  if (!rmTiles) return;
+  const t = tileSpec();
+  rmTiles.setUrl(t.base);
+  rmLabels.setUrl(t.labels);
+}
 
 function rampColor(v) {
   v = Math.max(0, Math.min(100, v));
@@ -498,7 +516,9 @@ function heatURL(vals) {
       const top = vals[y0 * GN + x0] * (1 - tx) + vals[y0 * GN + x0 + 1] * tx;
       const bot = vals[(y0 + 1) * GN + x0] * (1 - tx) + vals[(y0 + 1) * GN + x0 + 1] * tx;
       const c = rampColor(top * (1 - ty) + bot * ty), k = (y * GW + x) * 4;
-      img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = c[3] * 255;
+      img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; const nx = x / (GW - 1) * 2 - 1, ny = y / (GW - 1) * 2 - 1;
+      const m = Math.max(0, Math.min(1, (1 - Math.hypot(nx, ny)) / 0.4));   /* ขอบนุ่มเป็นวงกลม ไม่เป็นสี่เหลี่ยม */
+      img.data[k + 3] = c[3] * 255 * (m * m * (3 - 2 * m));
     }
   }
   g.putImageData(img, 0, 0);
@@ -516,7 +536,12 @@ function ensureMap() {
   $("rmEmpty").hidden = true;
   rm = L.map("rmap", { zoomControl: false, scrollWheelZoom: false, zoomSnap: 0.25 }).setView([loc.lat, loc.lon], 11);
   L.control.zoom({ position: "bottomright" }).addTo(rm);
-  rmTiles = L.tileLayer(tileUrl(), { maxZoom: 18, subdomains: "abcd", attribution: "© OpenStreetMap © CARTO" }).addTo(rm);
+  const t = tileSpec();
+  rm.createPane("labels");
+  rm.getPane("labels").style.zIndex = 450;            /* ชื่อสถานที่อยู่เหนือสี heatmap */
+  rm.getPane("labels").style.pointerEvents = "none";
+  rmTiles = L.tileLayer(t.base, { maxZoom: t.max, subdomains: t.sub, attribution: t.attr }).addTo(rm);
+  rmLabels = L.tileLayer(t.labels, { maxZoom: t.max, subdomains: t.sub, pane: "labels" }).addTo(rm);
   rmRing = L.circle([loc.lat, loc.lon], { radius: 5000, color: "#4cb4ec", weight: 1.5, dashArray: "6 6", fill: false, interactive: false }).addTo(rm);
   rmHome = L.marker([loc.lat, loc.lon], {
     icon: L.divIcon({ className: "", html: '<div class="home-pin"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }),

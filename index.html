@@ -79,6 +79,11 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
 @keyframes ring{70%{box-shadow:0 0 0 16px rgba(211,48,58,0)}100%{box-shadow:0 0 0 0 rgba(211,48,58,0)}}
 @media (prefers-reduced-motion:reduce){.home-pin{animation:none}}
 .leaflet-container{font-family:inherit}
+/* แอนิเมชันเปลี่ยนโหมดสี: วงกลมขยายออกจากปุ่ม (View Transitions) */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s ease,border-color .5s ease,fill .5s ease,stroke .5s ease!important}
+#themeIcon{display:inline-block;transition:transform .7s cubic-bezier(.22,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){#themeIcon{transition:none}html.theme-anim,html.theme-anim *{transition:none!important}}
 .alarm{position:fixed;inset:0;z-index:99;background:#b3121c;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px))}
 .alarm.on{display:flex;animation:flash 1s steps(2) infinite}
 @keyframes flash{50%{background:#7d0a12}}
@@ -116,7 +121,7 @@ footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
       <div class="btns">
         <button class="pri" id="gps" type="button">📍 ใช้ตำแหน่งปัจจุบัน (GPS)</button>
         <button id="alarmBtn" type="button">🔔 เปิดระบบ Alarm</button>
-        <button id="theme" type="button">◐ โหมดสี</button>
+        <button id="theme" type="button"><span id="themeIcon" aria-hidden="true">◐</span> โหมดสี</button>
       </div>
       <div class="msg" id="alarmState"></div>
       <div class="msg" id="msg" aria-live="polite"></div>
@@ -613,11 +618,30 @@ $("alarmBtn").onclick = toggleAlarm;
 $("alarmOk").onclick = ackAlarm;
 $("rmPlay").onclick = togglePlay;
 $("rmLocate").onclick = () => { if (rm && loc) rm.setView([loc.lat, loc.lon], 11); };
+let themeRot = 0;
 $("theme").onclick = () => {
   const r = document.documentElement;
   const dark = getComputedStyle(r).getPropertyValue("--bg").trim() === "#0a1420";
-  r.setAttribute("data-theme", dark ? "light" : "dark");
-  rmTheme();
+  const apply = () => { r.setAttribute("data-theme", dark ? "light" : "dark"); rmTheme(); };
+  themeRot += 180;
+  $("themeIcon").style.transform = "rotate(" + themeRot + "deg)";
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { apply(); return; }
+  if (!document.startViewTransition) {
+    /* เบราว์เซอร์ที่ยังไม่รองรับ: ค่อยๆ เปลี่ยนสีแทน */
+    r.classList.add("theme-anim");
+    apply();
+    setTimeout(() => r.classList.remove("theme-anim"), 600);
+    return;
+  }
+  const b = $("theme").getBoundingClientRect();
+  const x = b.left + b.width / 2, y = b.top + b.height / 2;
+  const rad = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  document.startViewTransition(apply).ready.then(() => {
+    r.animate(
+      { clipPath: ["circle(0px at " + x + "px " + y + "px)", "circle(" + rad + "px at " + x + "px " + y + "px)"] },
+      { duration: 700, easing: "cubic-bezier(.22,.8,.2,1)", pseudoElement: "::view-transition-new(root)" }
+    );
+  }).catch(() => {});
 };
 
 alarmOn = prefGet();

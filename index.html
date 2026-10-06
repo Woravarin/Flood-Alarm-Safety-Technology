@@ -97,6 +97,60 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
   .banner ul{text-align:left}
   .stats{grid-template-columns:1fr 1fr}
 }
+
+/* ---------- FAST AI Analyst ---------- */
+.ai-fab{
+  position:fixed;right:20px;bottom:20px;z-index:1200;
+  width:58px;height:58px;border-radius:50%;border:0;
+  background:var(--water);color:#fff;font-size:1.55rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.25)
+}
+.ai-fab:hover{transform:translateY(-2px);opacity:1}
+.ai-modal{
+  position:fixed;inset:0;z-index:1100;display:none;
+  background:rgba(0,0,0,.45);padding:20px
+}
+.ai-modal.on{display:flex;align-items:flex-end;justify-content:flex-end}
+.ai-box{
+  width:min(520px,100%);max-height:min(760px,92vh);
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.3);
+  display:flex;flex-direction:column;overflow:hidden
+}
+.ai-head{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)
+}
+.ai-head h2{font-size:1.05rem}
+.ai-close{border:0;background:transparent;font-size:1.3rem;padding:4px 8px}
+.ai-data{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
+  padding:12px;border-bottom:1px solid var(--line)
+}
+.ai-data div{background:var(--panel2);border-radius:10px;padding:8px}
+.ai-data b{display:block;font-size:1rem}
+.ai-data span{display:block;color:var(--mute);font-size:.72rem}
+.ai-quick{display:flex;gap:7px;overflow-x:auto;padding:10px 12px}
+.ai-quick button{white-space:nowrap;font-size:.8rem;padding:7px 10px}
+.ai-chat{padding:12px;overflow:auto;min-height:190px;max-height:390px}
+.ai-msg{
+  max-width:88%;padding:9px 12px;border-radius:13px;
+  margin-bottom:8px;font-size:.9rem;white-space:pre-wrap
+}
+.ai-msg.user{margin-left:auto;background:var(--water);color:#fff}
+.ai-msg.bot{margin-right:auto;background:var(--panel2)}
+.ai-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.ai-form input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);
+  border-radius:9px;background:var(--panel);color:var(--text)}
+.ai-note{padding:0 12px 12px;color:var(--mute);font-size:.72rem}
+@media(max-width:600px){
+  .ai-modal{padding:0}
+  .ai-modal.on{align-items:flex-end}
+  .ai-box{border-radius:18px 18px 0 0;max-height:94vh}
+  .ai-data{grid-template-columns:repeat(2,1fr)}
+  .ai-fab{right:15px;bottom:15px}
+}
+
 </style>
 </head>
 <body>
@@ -185,6 +239,49 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
       <span><i style="background:var(--crit)"></i>วิกฤต 75% ขึ้นไป</span>
     </div>
   </section>
+
+
+  <!-- FAST AI Analyst -->
+  <button class="ai-fab" id="aiFab" type="button" aria-label="เปิด FAST AI Analyst">🤖</button>
+
+  <div class="ai-modal" id="aiModal" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+    <div class="ai-box">
+      <div class="ai-head">
+        <div>
+          <h2 id="aiTitle">🤖 FAST AI Analyst</h2>
+          <div class="sub">วิเคราะห์จากข้อมูลที่ FAST มีอยู่ตอนนี้</div>
+        </div>
+        <button class="ai-close" id="aiClose" type="button" aria-label="ปิด">✕</button>
+      </div>
+
+      <div class="ai-data" id="aiData">
+        <div><b id="aiTemp">--</b><span>อุณหภูมิ</span></div>
+        <div><b id="aiRain">--</b><span>ฝนตอนนี้</span></div>
+        <div><b id="aiMax">--</b><span>ฝนสูงสุด 6 ชม.</span></div>
+        <div><b id="aiSum">--</b><span>ฝนสะสม 24 ชม.</span></div>
+        <div><b id="aiRisk">--</b><span>ความเสี่ยง</span></div>
+        <div><b id="aiPlace">--</b><span>พื้นที่</span></div>
+      </div>
+
+      <div class="ai-quick">
+        <button type="button" data-ai-q="ฝนจะตกหนักไหม?">🌧️ ฝนจะตกหนักไหม?</button>
+        <button type="button" data-ai-q="มีโอกาสน้ำท่วมไหม?">🌊 น้ำท่วมไหม?</button>
+        <button type="button" data-ai-q="ความเสี่ยงเพิ่มขึ้นไหม?">📈 เสี่ยงเพิ่มไหม?</button>
+        <button type="button" data-ai-q="วิเคราะห์สถานการณ์ตอนนี้">🔎 วิเคราะห์ตอนนี้</button>
+      </div>
+
+      <div class="ai-chat" id="aiChat" aria-live="polite">
+        <div class="ai-msg bot">สวัสดีครับ ผม FAST AI Analyst 👋<br>ถามเกี่ยวกับฝนและความเสี่ยงน้ำท่วมจากข้อมูลที่ระบบมีได้เลย</div>
+      </div>
+
+      <form class="ai-form" id="aiForm">
+        <input id="aiInput" type="text" autocomplete="off"
+               placeholder="เช่น อีก 3 ชั่วโมงฝนจะเป็นอย่างไร?">
+        <button class="pri" type="submit">ส่ง</button>
+      </form>
+      <div class="ai-note">AI ใช้ข้อมูลจาก FAST เป็นหลัก และไม่ควรใช้แทนประกาศเตือนภัยจากหน่วยงานทางการ</div>
+    </div>
+  </div>
 
   <div class="alarm" id="alarm" role="alertdialog" aria-live="assertive" aria-labelledby="alarmTitle">
     <div style="font-size:4rem" aria-hidden="true">🚨</div>
@@ -354,6 +451,7 @@ function render(d) {
     if ((k ? 0 : cur.rain) >= 10 || (R[i + k] || 0) >= 10) { eta = k; break; }
   }
   checkAlarm(lvlIdx(soon), soon, eta);
+  updateFastAIData();
 }
 
 /* ---------- ระบบ Alarm ---------- */
@@ -636,6 +734,128 @@ function buildChips() {
   }
   showHour();
 }
+
+
+/* ---------- FAST AI Analyst ---------- */
+/*
+  ใส่ URL ของ Backend ของคุณตรงนี้
+  ตัวอย่าง: https://fast-ai-xxxx.workers.dev/api/fast-ai
+  ห้ามใส่ OpenAI API Key ในไฟล์นี้
+*/
+const FAST_AI_BACKEND = "YOUR-BACKEND-URL/api/fast-ai";
+
+let fastAIData = {
+  location: null,
+  temperature: null,
+  humidity: null,
+  currentRain: null,
+  maxRain6h: null,
+  sumRain24h: null,
+  risk: null,
+  riskLevel: null,
+  updated: null
+};
+
+function updateFastAIData() {
+  fastAIData.location = loc ? (loc.name || `${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`) : null;
+  fastAIData.updated = new Date().toISOString();
+
+  $("aiTemp").textContent = $("sTemp").textContent === "--" ? "--" : $("sTemp").textContent + "°C";
+  $("aiRain").textContent = $("sRain").textContent === "--" ? "--" : $("sRain").textContent + " มม.";
+  $("aiMax").textContent = $("sMax").textContent === "--" ? "--" : $("sMax").textContent + " มม./ชม.";
+  $("aiSum").textContent = $("sSum").textContent === "--" ? "--" : $("sSum").textContent + " มม.";
+  $("aiRisk").textContent = $("num").textContent === "--" ? "--" : $("num").textContent + "%";
+  $("aiPlace").textContent = fastAIData.location || "--";
+
+  fastAIData.temperature = $("sTemp").textContent;
+  fastAIData.humidity = $("sHum").textContent;
+  fastAIData.currentRain = $("sRain").textContent;
+  fastAIData.maxRain6h = $("sMax").textContent;
+  fastAIData.sumRain24h = $("sSum").textContent;
+  fastAIData.risk = $("num").textContent;
+  fastAIData.riskLevel = $("lvl").textContent;
+}
+
+function openFastAI() {
+  updateFastAIData();
+  $("aiModal").classList.add("on");
+  $("aiInput").focus();
+}
+
+function closeFastAI() {
+  $("aiModal").classList.remove("on");
+}
+
+function addAIMessage(text, who) {
+  const el = document.createElement("div");
+  el.className = "ai-msg " + who;
+  el.textContent = text;
+  $("aiChat").appendChild(el);
+  $("aiChat").scrollTop = $("aiChat").scrollHeight;
+}
+
+async function askFastAI(question) {
+  updateFastAIData();
+
+  if (!question.trim()) return;
+
+  addAIMessage(question, "user");
+
+  if (FAST_AI_BACKEND.includes("YOUR-BACKEND-URL")) {
+    addAIMessage("ยังไม่ได้เชื่อมต่อ FAST AI Backend กรุณาใส่ URL ของ Backend ในโค้ดก่อน", "bot");
+    return;
+  }
+
+  const loading = document.createElement("div");
+  loading.className = "ai-msg bot";
+  loading.textContent = "กำลังวิเคราะห์ข้อมูลของ FAST...";
+  $("aiChat").appendChild(loading);
+  $("aiChat").scrollTop = $("aiChat").scrollHeight;
+
+  try {
+    const res = await fetch(FAST_AI_BACKEND, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        question,
+        data: fastAIData
+      })
+    });
+
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const result = await res.json();
+    loading.remove();
+
+    addAIMessage(
+      result.answer || "ยังไม่มีคำตอบจาก AI",
+      "bot"
+    );
+  } catch (e) {
+    console.error(e);
+    loading.remove();
+    addAIMessage("เชื่อมต่อ FAST AI ไม่สำเร็จ กรุณาตรวจสอบ Backend และอินเทอร์เน็ต", "bot");
+  }
+}
+
+$("aiFab").onclick = openFastAI;
+$("aiClose").onclick = closeFastAI;
+
+$("aiModal").addEventListener("click", e => {
+  if (e.target === $("aiModal")) closeFastAI();
+});
+
+document.querySelectorAll("[data-ai-q]").forEach(btn => {
+  btn.addEventListener("click", () => askFastAI(btn.dataset.aiQ));
+});
+
+$("aiForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const q = $("aiInput").value.trim();
+  if (!q) return;
+  $("aiInput").value = "";
+  askFastAI(q);
+});
 
 /* ---------- เริ่มทำงาน ---------- */
 $("gps").onclick = startAuto;

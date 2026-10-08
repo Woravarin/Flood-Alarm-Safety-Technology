@@ -8,52 +8,129 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{
-  --bg:#eef3f7;--panel:#fff;--panel2:#e6edf3;--line:#d3dde6;--text:#10202e;--mute:#58697a;
-  --water:#0a7bb8;--ok:#1f9d63;--warn:#c98a00;--high:#d9622b;--crit:#d3303a;--lvl:var(--ok)}
+  --bg:#f3f5f9;--panel:#fff;--panel2:#eef1f6;--line:#e2e7ef;--text:#0b1220;--mute:#5d687c;
+  --water:#0284c7;--ok:#16a05f;--warn:#d08b00;--high:#e0602a;--crit:#dc2f3c;--lvl:var(--ok);
+  --g1:rgba(2,132,199,.16);--g2:rgba(99,102,241,.12);
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 12px 36px rgba(15,23,42,.07)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0a1420;--panel:#112031;--panel2:#0b1826;--line:#223a52;--text:#e8f1f8;--mute:#8da3b8;
-  --water:#4cb4ec;--ok:#4cd68f;--warn:#f2c14e;--high:#ff8a4c;--crit:#ff5d66}}
+  --bg:#050608;--panel:#0c0f14;--panel2:#141922;--line:#1e2530;--text:#eef2f7;--mute:#8a94a6;
+  --water:#38bdf8;--ok:#34d399;--warn:#fbbf24;--high:#fb923c;--crit:#f87171;
+  --g1:rgba(56,189,248,.10);--g2:rgba(129,140,248,.09);
+  --shadow:0 0 0 1px rgba(255,255,255,.02) inset,0 14px 44px rgba(0,0,0,.65)}}
 :root[data-theme="dark"]{
-  --bg:#0a1420;--panel:#112031;--panel2:#0b1826;--line:#223a52;--text:#e8f1f8;--mute:#8da3b8;
-  --water:#4cb4ec;--ok:#4cd68f;--warn:#f2c14e;--high:#ff8a4c;--crit:#ff5d66}
+  --bg:#050608;--panel:#0c0f14;--panel2:#141922;--line:#1e2530;--text:#eef2f7;--mute:#8a94a6;
+  --water:#38bdf8;--ok:#34d399;--warn:#fbbf24;--high:#fb923c;--crit:#f87171;
+  --g1:rgba(56,189,248,.10);--g2:rgba(129,140,248,.09);
+  --shadow:0 0 0 1px rgba(255,255,255,.02) inset,0 14px 44px rgba(0,0,0,.65)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",Tahoma,sans-serif;line-height:1.6;min-height:100vh}
-.wrap{max-width:1100px;margin:0 auto;padding:20px 5% 40px}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:22px}
-h1{font-size:1.5rem;font-weight:700}
-.sub{color:var(--mute);font-size:.9rem}
-.time{text-align:right}
-.time b{display:block;font-size:1.9rem;line-height:1.2;font-variant-numeric:tabular-nums}
-button{font:inherit;cursor:pointer;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px}
-button.pri{background:var(--water);color:#fff;border-color:var(--water);font-weight:600}
-button:hover{opacity:.88}
+body{background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",Tahoma,sans-serif;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(900px 520px at 8% -8%,var(--g1),transparent 62%),radial-gradient(760px 480px at 100% 0,var(--g2),transparent 58%)}
+.wrap{max-width:1100px;margin:0 auto;padding:max(18px,env(safe-area-inset-top,0px)) 5% 48px}
+.sub{color:var(--mute);font-size:.88rem}
+.eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+
+/* ปุ่ม */
+button{font:inherit;cursor:pointer;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 16px;transition:transform .15s,box-shadow .2s,background .2s,border-color .2s}
+button:hover{transform:translateY(-1px)}
+button:active{transform:scale(.97)}
+button.pri{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--water),#6366f1);color:#fff;border:0;font-weight:600;padding:11px 20px;box-shadow:0 8px 22px color-mix(in srgb,var(--water) 32%,transparent)}
+button.pri svg{width:18px;height:18px}
 button:focus-visible,input:focus-visible{outline:3px solid var(--water);outline-offset:2px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
-.card h2{font-size:1rem;font-weight:600;margin-bottom:12px}
-.loc{margin-bottom:18px}
-.place{font-size:1.25rem;font-weight:700}
-.btns{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
-.msg{margin-top:12px;font-size:.88rem;color:var(--mute);min-height:1.4em}
-.banner{border-radius:14px;padding:20px 24px;background:var(--panel);border:1px solid var(--line);border-left:8px solid var(--lvl);display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;margin-bottom:18px}
-.gauge{width:190px;position:relative}
-.gauge svg{width:100%;display:block}
-.gnum{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:2.4rem;font-weight:700;line-height:1;color:var(--lvl)}
-.gnum small{font-size:1rem}
-.lvl{font-size:1.5rem;font-weight:700;color:var(--lvl)}
-.banner ul{margin:10px 0 0 1.2rem}
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
-.stat b{display:block;font-size:1.4rem}
-.stat span{color:var(--mute);font-size:.8rem}
-.bars{display:flex;align-items:flex-end;gap:12px;height:170px;border-bottom:1px solid var(--line)}
+
+/* ส่วนหัว */
+header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.logo{width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,var(--water),#6366f1);box-shadow:0 8px 24px color-mix(in srgb,var(--water) 38%,transparent)}
+.logo svg{width:25px;height:25px;stroke:#fff}
+h1{font-size:1.4rem;font-weight:700;letter-spacing:.08em;line-height:1.1}
+.top-right{display:flex;align-items:center;gap:16px}
+.clock{text-align:right;line-height:1.3}
+.clock b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.icon-btn{width:46px;height:46px;padding:0;border-radius:50%;display:grid;place-items:center;background:var(--panel);box-shadow:var(--shadow)}
+.icon-btn svg{width:22px;height:22px}
+
+/* การ์ดทั่วไป */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.card h2{font-size:1.02rem;font-weight:600;margin-bottom:12px}
+
+/* การ์ดตำแหน่ง */
+.hero{margin-bottom:18px;padding:22px 24px}
+.hero-main{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.pin{width:50px;height:50px;border-radius:16px;flex:none;display:grid;place-items:center;background:color-mix(in srgb,var(--water) 14%,var(--panel2));color:var(--water)}
+.pin svg{width:24px;height:24px}
+.hero-text{flex:1;min-width:180px}
+.place{font-size:1.5rem;font-weight:700;line-height:1.25;letter-spacing:-.01em}
+.pill{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:.82rem;color:var(--mute)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:live 2s infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent)}70%,100%{box-shadow:0 0 0 8px transparent}}
+.hero-actions{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.switches{display:flex;gap:28px;flex-wrap:wrap}
+.switch-row{display:flex;align-items:center;gap:12px}
+.switch{width:54px;height:30px;padding:0;border-radius:999px;position:relative;flex:none;background:var(--panel2)}
+.switch .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--mute);transition:transform .3s cubic-bezier(.3,1.4,.5,1),background .2s,box-shadow .2s}
+.switch[aria-checked="true"]{background:color-mix(in srgb,var(--ok) 28%,var(--panel2));border-color:var(--ok)}
+.switch[aria-checked="true"] .knob{transform:translateX(24px);background:var(--ok);box-shadow:0 0 12px var(--ok)}
+.switch:hover,.switch:active{transform:none}
+.switch-text{display:flex;flex-direction:column;line-height:1.3}
+.switch-text b{font-size:.92rem}
+.switch-text span{font-size:.78rem;color:var(--mute)}
+.msg{margin-top:12px;font-size:.86rem;color:var(--mute);min-height:1.3em}
+
+/* การ์ดความเสี่ยง */
+.banner{position:relative;overflow:hidden;display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;margin-bottom:18px;padding:26px 28px;border-color:color-mix(in srgb,var(--lvl) 40%,var(--line))}
+.banner::before{content:"";position:absolute;width:460px;height:460px;left:-120px;top:-180px;background:radial-gradient(circle,color-mix(in srgb,var(--lvl) 24%,transparent),transparent 65%);pointer-events:none}
+.banner>*{position:relative}
+.gauge{width:210px;position:relative}
+.gauge svg{width:100%;display:block;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--lvl) 50%,transparent))}
+.gnum{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:2.8rem;font-weight:700;line-height:1;letter-spacing:-.02em;color:var(--lvl);font-variant-numeric:tabular-nums}
+.gnum small{font-size:1.05rem}
+.lvl{font-size:1.7rem;font-weight:700;color:var(--lvl);line-height:1.2;margin:2px 0 4px}
+.rainchance{margin-top:16px;max-width:480px}
+.rc-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem;font-weight:600}
+.rc-head b{font-size:1.35rem;color:var(--water);font-variant-numeric:tabular-nums}
+.rc-bar{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden;margin:6px 0 5px}
+.rc-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#6366f1);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.rc-sub{font-size:.82rem;color:var(--mute)}
+.rc-sub b{color:var(--text)}
+.advice{--ac:var(--ok);display:flex;gap:14px;align-items:center;margin-top:16px;padding:14px 16px;border-radius:18px;background:color-mix(in srgb,var(--ac) 11%,var(--panel));border:1px solid color-mix(in srgb,var(--ac) 45%,var(--line))}
+.advice[data-t="umb"]{--ac:var(--water)}
+.advice[data-t="stay"]{--ac:var(--crit)}
+.adv-ico{width:48px;height:48px;border-radius:15px;flex:none;display:grid;place-items:center;font-size:1.5rem;background:color-mix(in srgb,var(--ac) 20%,transparent)}
+.adv-t{font-weight:700;font-size:1.12rem;line-height:1.3;color:var(--ac)}
+.adv-d{font-size:.88rem;line-height:1.5;opacity:.88}
+#acts{margin:12px 0 0 1.2rem;font-size:.88rem;color:var(--mute)}
+
+/* ตัวเลขสภาพอากาศ */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.si{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--panel2);font-size:1.05rem;margin-bottom:10px}
+.stat b{display:block;font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat span{display:block;margin-top:4px;color:var(--mute);font-size:.78rem;line-height:1.35}
+
+/* กราฟแนวโน้ม */
+.bars{display:flex;align-items:flex-end;gap:14px;height:180px;border-bottom:1px solid var(--line)}
 .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
-.col .v{font-weight:600;font-size:.95rem;margin-bottom:4px}
-.col .b{width:100%;max-width:70px;border-radius:6px 6px 0 0;min-height:4px;transition:height .3s}
-.labels{display:flex;gap:12px;margin-top:6px}
+.col .v{font-weight:700;font-size:.95rem;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.col .b{--c:var(--ok);width:100%;max-width:76px;min-height:6px;border-radius:12px 12px 4px 4px;transition:height .5s cubic-bezier(.2,.8,.2,1);background:linear-gradient(180deg,var(--c),color-mix(in srgb,var(--c) 45%,transparent));box-shadow:0 8px 26px color-mix(in srgb,var(--c) 30%,transparent)}
+.labels,.prow{display:flex;gap:14px}
+.labels{margin-top:8px}
 .labels div{flex:1;text-align:center;color:var(--mute);font-size:.8rem}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:.8rem;color:var(--mute)}
+.rowlabel{margin:20px 0 8px;font-size:.88rem;font-weight:600}
+.pi{flex:1;text-align:center}
+.pi b{font-size:1rem;color:var(--water);font-variant-numeric:tabular-nums}
+.pi i{display:block;position:relative;overflow:hidden;height:6px;max-width:76px;margin:5px auto 0;border-radius:99px;background:var(--panel2)}
+.pi i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--p,0%);border-radius:99px;background:linear-gradient(90deg,#38bdf8,#6366f1)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;font-size:.8rem;color:var(--mute)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
-footer{text-align:center;color:var(--mute);font-size:.8rem;margin-top:26px}
+footer{text-align:center;color:var(--mute);font-size:.78rem;margin-top:28px}
+
+/* แอนิเมชันตอนเปิดหน้า */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.wrap>*:not(.alarm){animation:rise .65s cubic-bezier(.2,.8,.2,1) backwards}
+.wrap>*:nth-child(2){animation-delay:.06s}.wrap>*:nth-child(3){animation-delay:.12s}.wrap>*:nth-child(4){animation-delay:.18s}
+.wrap>*:nth-child(5){animation-delay:.24s}.wrap>*:nth-child(6){animation-delay:.3s}.wrap>*:nth-child(7){animation-delay:.36s}
+@media (prefers-reduced-motion:reduce){.wrap>*{animation:none!important}.dot{animation:none}button{transition:none}}
+
 .rm{padding:0;overflow:hidden}
 .rm-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:20px 20px 14px}
 .rm-head h2{margin:0 0 2px}
@@ -92,97 +169,58 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
 .alarm p{font-size:1.15rem;max-width:520px}
 .alarm button{background:#fff;color:#7d0a12;font-weight:700;font-size:1.1rem;padding:14px 28px;border:0;margin-top:10px}
 @media (max-width:800px){
-  .time{text-align:left}
-  .banner{grid-template-columns:1fr;justify-items:center;text-align:center}
-  .banner ul{text-align:left}
+  .banner{grid-template-columns:1fr;justify-items:center;gap:18px;padding:22px}
+  .banner-body{width:100%}
   .stats{grid-template-columns:1fr 1fr}
+  .stat:last-child{grid-column:1/-1}
 }
-
-/* ---------- FAST AI Analyst ---------- */
-.ai-fab{
-  position:fixed;right:20px;bottom:20px;z-index:1200;
-  width:58px;height:58px;border-radius:50%;border:0;
-  background:var(--water);color:#fff;font-size:1.55rem;
-  box-shadow:0 8px 28px rgba(0,0,0,.25)
+@media (max-width:560px){
+  .clock .sub{display:none}
+  .clock b{font-size:1.1rem}
+  .place{font-size:1.28rem}
+  .hero{padding:18px}
+  .hero-actions{flex-direction:column;align-items:stretch}
+  .hero-actions .pri{justify-content:center}
+  .bars,.labels,.prow{gap:8px}
 }
-.ai-fab:hover{transform:translateY(-2px);opacity:1}
-.ai-modal{
-  position:fixed;inset:0;z-index:1100;display:none;
-  background:rgba(0,0,0,.45);padding:20px
-}
-.ai-modal.on{display:flex;align-items:flex-end;justify-content:flex-end}
-.ai-box{
-  width:min(520px,100%);max-height:min(760px,92vh);
-  background:var(--panel);border:1px solid var(--line);
-  border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.3);
-  display:flex;flex-direction:column;overflow:hidden
-}
-.ai-head{
-  display:flex;justify-content:space-between;align-items:center;
-  gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)
-}
-.ai-head h2{font-size:1.05rem}
-.ai-close{border:0;background:transparent;font-size:1.3rem;padding:4px 8px}
-.ai-data{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
-  padding:12px;border-bottom:1px solid var(--line)
-}
-.ai-data div{background:var(--panel2);border-radius:10px;padding:8px}
-.ai-data b{display:block;font-size:1rem}
-.ai-data span{display:block;color:var(--mute);font-size:.72rem}
-.ai-quick{display:flex;gap:7px;overflow-x:auto;padding:10px 12px}
-.ai-quick button{white-space:nowrap;font-size:.8rem;padding:7px 10px}
-.ai-chat{padding:12px;overflow:auto;min-height:190px;max-height:390px}
-.ai-msg{
-  max-width:88%;padding:9px 12px;border-radius:13px;
-  margin-bottom:8px;font-size:.9rem;white-space:pre-wrap
-}
-.ai-msg.user{margin-left:auto;background:var(--water);color:#fff}
-.ai-msg.bot{margin-right:auto;background:var(--panel2)}
-.ai-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
-.ai-form input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);
-  border-radius:9px;background:var(--panel);color:var(--text)}
-.ai-note{padding:0 12px 12px;color:var(--mute);font-size:.72rem}
-@media(max-width:600px){
-  .ai-modal{padding:0}
-  .ai-modal.on{align-items:flex-end}
-  .ai-box{border-radius:18px 18px 0 0;max-height:94vh}
-  .ai-data{grid-template-columns:repeat(2,1fr)}
-  .ai-fab{right:15px;bottom:15px}
-}
-
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <h1>🌊 FAST</h1>
-      <div class="sub">Flood Alert System & Tracking</div>
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.5 3 4 5.2 4 7.2a4 4 0 0 1-8 0C8 8.2 9.5 6 12 3z"/><path d="M2 16c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 21c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/></svg></div>
+      <div><h1>FAST</h1><div class="sub">Flood Alert System &amp; Tracking</div></div>
     </div>
-    <div class="time">
-      <b id="clock">--:--:--</b>
-      <div class="sub" id="date">--</div>
-      <div class="sub" id="updated">ยังไม่ได้อัปเดต</div>
+    <div class="top-right">
+      <div class="clock"><b id="clock">--:--:--</b><div class="sub" id="date">--</div></div>
+      <button class="icon-btn" id="theme" type="button" aria-label="สลับโหมดสว่างหรือมืด"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
     </div>
   </header>
 
-  <div class="loc">
-    <section class="card">
-      <h2>📍 ตำแหน่งที่เฝ้าระวัง</h2>
-      <div class="place" id="place">กำลังโหลด...</div>
-      <div class="sub" id="coordText"></div>
-      <div class="btns">
-        <button class="pri" id="gps" type="button">📍 ใช้ตำแหน่งปัจจุบัน (GPS)</button>
-        <button id="alarmBtn" type="button">🔔 เปิดระบบ Alarm</button>
-        <button id="theme" type="button"><span id="themeIcon" aria-hidden="true">◐</span> โหมดสี</button>
+  <section class="card hero">
+    <div class="hero-main">
+      <div class="pin" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.800 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
+      <div class="hero-text">
+        <div class="eyebrow">ตำแหน่งที่เฝ้าระวัง</div>
+        <div class="place" id="place">กำลังโหลด...</div>
+        <div class="sub" id="coordText"></div>
       </div>
-      <div class="msg" id="alarmState"></div>
-      <div class="msg" id="msg" aria-live="polite"></div>
-    </section>
-  </div>
+      <div class="pill"><i class="dot"></i><span id="updated">ยังไม่ได้อัปเดต</span></div>
+    </div>
+    <div class="hero-actions">
+      <button class="pri" id="gps" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>ใช้ตำแหน่งปัจจุบัน (GPS)</button>
+      <div class="switches">
+      <div class="switch-row">
+        <button class="switch" id="alarmBtn" type="button" role="switch" aria-checked="false" aria-label="เปิดหรือปิดระบบ Alarm"><span class="knob"></span></button>
+        <div class="switch-text"><b>ระบบ Alarm</b><span id="alarmState"></span></div>
+      </div>
+      </div>
+    </div>
+    <div class="msg" id="msg" aria-live="polite"></div>
+  </section>
 
-  <section class="banner" id="banner" aria-live="polite">
+  <section class="card banner" id="banner" aria-live="polite">
     <div class="gauge">
       <svg viewBox="0 0 200 110" aria-hidden="true">
         <path d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>
@@ -190,9 +228,19 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
       </svg>
       <div class="gnum"><span id="num">--</span><small>%</small></div>
     </div>
-    <div>
+    <div class="banner-body">
+      <div class="eyebrow">ความเสี่ยงน้ำท่วม</div>
       <div class="lvl" id="lvl">กำลังวิเคราะห์...</div>
       <div class="sub" id="lvlDesc"></div>
+      <div class="rainchance">
+        <div class="rc-head"><span>☔ โอกาสฝนตก (ชั่วโมงนี้)</span><b id="rcNow">--%</b></div>
+        <div class="rc-bar"><i id="rcBar"></i></div>
+        <div class="rc-sub">สูงสุดใน 6 ชั่วโมงข้างหน้า <b id="rcMax">--%</b></div>
+      </div>
+      <div class="advice" id="advice" data-t="ok">
+        <div class="adv-ico" id="advIco" aria-hidden="true">✅</div>
+        <div><div class="adv-t" id="advT">กำลังวิเคราะห์...</div><div class="adv-d" id="advD"></div></div>
+      </div>
       <ul id="acts"></ul>
     </div>
   </section>
@@ -221,17 +269,19 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
   </section>
 
   <div class="stats">
-    <div class="stat"><b id="sTemp">--</b><span>อุณหภูมิ (°C)</span></div>
-    <div class="stat"><b id="sHum">--</b><span>ความชื้น (%)</span></div>
-    <div class="stat"><b id="sRain">--</b><span>ฝนปัจจุบัน (มม.)</span></div>
-    <div class="stat"><b id="sMax">--</b><span>ฝนสูงสุดใน 6 ชม. (มม./ชม.)</span></div>
-    <div class="stat"><b id="sSum">--</b><span>ฝนสะสม 24 ชม. ข้างหน้า (มม.)</span></div>
+    <div class="stat"><div class="si" aria-hidden="true">🌡️</div><b id="sTemp">--</b><span>อุณหภูมิ (°C)</span></div>
+    <div class="stat"><div class="si" aria-hidden="true">💧</div><b id="sHum">--</b><span>ความชื้น (%)</span></div>
+    <div class="stat"><div class="si" aria-hidden="true">🌧️</div><b id="sRain">--</b><span>ฝนปัจจุบัน (มม.)</span></div>
+    <div class="stat"><div class="si" aria-hidden="true">⛈️</div><b id="sMax">--</b><span>ฝนสูงสุดใน 6 ชม. (มม./ชม.)</span></div>
+    <div class="stat"><div class="si" aria-hidden="true">🪣</div><b id="sSum">--</b><span>ฝนสะสม 24 ชม. ข้างหน้า (มม.)</span></div>
   </div>
 
   <section class="card">
     <h2>📈 แนวโน้มความเสี่ยงน้ำท่วม</h2>
     <div class="bars" id="bars"></div>
     <div class="labels" id="labels"></div>
+    <div class="rowlabel">☔ โอกาสเกิดฝนตกตามพยากรณ์</div>
+    <div class="prow" id="prow"></div>
     <div class="legend">
       <span><i style="background:var(--ok)"></i>ต่ำ ต่ำกว่า 25%</span>
       <span><i style="background:var(--warn)"></i>เฝ้าระวัง 25–49%</span>
@@ -239,49 +289,6 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
       <span><i style="background:var(--crit)"></i>วิกฤต 75% ขึ้นไป</span>
     </div>
   </section>
-
-
-  <!-- FAST AI Analyst -->
-  <button class="ai-fab" id="aiFab" type="button" aria-label="เปิด FAST AI Analyst">🤖</button>
-
-  <div class="ai-modal" id="aiModal" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
-    <div class="ai-box">
-      <div class="ai-head">
-        <div>
-          <h2 id="aiTitle">🤖 FAST AI Analyst</h2>
-          <div class="sub">วิเคราะห์จากข้อมูลที่ FAST มีอยู่ตอนนี้</div>
-        </div>
-        <button class="ai-close" id="aiClose" type="button" aria-label="ปิด">✕</button>
-      </div>
-
-      <div class="ai-data" id="aiData">
-        <div><b id="aiTemp">--</b><span>อุณหภูมิ</span></div>
-        <div><b id="aiRain">--</b><span>ฝนตอนนี้</span></div>
-        <div><b id="aiMax">--</b><span>ฝนสูงสุด 6 ชม.</span></div>
-        <div><b id="aiSum">--</b><span>ฝนสะสม 24 ชม.</span></div>
-        <div><b id="aiRisk">--</b><span>ความเสี่ยง</span></div>
-        <div><b id="aiPlace">--</b><span>พื้นที่</span></div>
-      </div>
-
-      <div class="ai-quick">
-        <button type="button" data-ai-q="ฝนจะตกหนักไหม?">🌧️ ฝนจะตกหนักไหม?</button>
-        <button type="button" data-ai-q="มีโอกาสน้ำท่วมไหม?">🌊 น้ำท่วมไหม?</button>
-        <button type="button" data-ai-q="ความเสี่ยงเพิ่มขึ้นไหม?">📈 เสี่ยงเพิ่มไหม?</button>
-        <button type="button" data-ai-q="วิเคราะห์สถานการณ์ตอนนี้">🔎 วิเคราะห์ตอนนี้</button>
-      </div>
-
-      <div class="ai-chat" id="aiChat" aria-live="polite">
-        <div class="ai-msg bot">สวัสดีครับ ผม FAST AI Analyst 👋<br>ถามเกี่ยวกับฝนและความเสี่ยงน้ำท่วมจากข้อมูลที่ระบบมีได้เลย</div>
-      </div>
-
-      <form class="ai-form" id="aiForm">
-        <input id="aiInput" type="text" autocomplete="off"
-               placeholder="เช่น อีก 3 ชั่วโมงฝนจะเป็นอย่างไร?">
-        <button class="pri" type="submit">ส่ง</button>
-      </form>
-      <div class="ai-note">AI ใช้ข้อมูลจาก FAST เป็นหลัก และไม่ควรใช้แทนประกาศเตือนภัยจากหน่วยงานทางการ</div>
-    </div>
-  </div>
 
   <div class="alarm" id="alarm" role="alertdialog" aria-live="assertive" aria-labelledby="alarmTitle">
     <div style="font-size:4rem" aria-hidden="true">🚨</div>
@@ -440,9 +447,10 @@ function render(d) {
 
   $("bars").innerHTML = OFFSETS.map(([o]) => {
     const v = at(o);
-    return '<div class="col"><div class="v">' + v + '%</div><div class="b" style="height:' + v * 1.2 + 'px;background:' + LV[lvlIdx(v)].c + '"></div></div>';
+    return '<div class="col"><div class="v">' + v + '%</div><div class="b" style="height:' + v * 1.2 + 'px;--c:' + LV[lvlIdx(v)].c + '"></div></div>';
   }).join("");
   $("labels").innerHTML = OFFSETS.map(([, t]) => "<div>" + t + "</div>").join("");
+  $("prow").innerHTML = OFFSETS.map(([o]) => { const p = Math.round(P[i + o] || 0); return '<div class="pi"><b>' + p + '%</b><i style="--p:' + p + '%"></i></div>'; }).join("");
 
   /* Alarm: ดูความเสี่ยงสูงสุดของตอนนี้และอีก 3 ชม. ข้างหน้า และหาว่าฝนหนัก (10 มม./ชม. ขึ้นไป) จะมาเมื่อไหร่ */
   const soon = Math.max(risk, at(3));
@@ -450,8 +458,29 @@ function render(d) {
   for (let k = 0; k <= 5; k++) {
     if ((k ? 0 : cur.rain) >= 10 || (R[i + k] || 0) >= 10) { eta = k; break; }
   }
+  /* โอกาสฝนตก + คำแนะนำการออกจากบ้าน (ใช้ข้อมูลพยากรณ์จริงชุดเดียวกับมาตรวัด) */
+  const pNow = Math.round(P[i] || 0), pMax6 = Math.round(mx(P, i, i + 5)), rMax6 = mx(R, i, i + 5);
+  $("rcNow").textContent = pNow + "%";
+  $("rcBar").style.width = pNow + "%";
+  $("rcMax").textContent = pMax6 + "%";
+  let adv;
+  if (lvlIdx(soon) >= 2 || (eta >= 0 && eta <= 3)) {
+    adv = ["stay", "🚫", "ไม่ควรออกจากบ้าน",
+      (eta === 0 ? "ตอนนี้มีฝนตกหนัก" : eta > 0 && eta <= 3 ? "คาดว่าฝนจะตกหนักภายใน " + eta + " ชม." : "ความเสี่ยงน้ำท่วมช่วงนี้อยู่ในระดับ" + LV[lvlIdx(soon)].name) +
+      " หากไม่จำเป็นควรรอให้ฝนซา และเลี่ยงเส้นทางที่มีน้ำท่วมขัง"];
+  } else if (pMax6 >= 40 || cur.rain >= 0.1 || rMax6 >= 0.5) {
+    adv = ["umb", "☂️", "ออกจากบ้านได้ แต่ควรพกร่ม",
+      "โอกาสฝนตกสูงสุด " + pMax6 + "% ใน 6 ชม. ข้างหน้า" + (rMax6 >= 0.5 ? " (ฝนสูงสุดราว " + rMax6.toFixed(1) + " มม./ชม.)" : "") + " แนะนำพกร่มหรือเสื้อกันฝน"];
+  } else {
+    adv = ["ok", "✅", "ออกจากบ้านได้ตามปกติ",
+      "โอกาสฝนตกสูงสุดใน 6 ชม. ข้างหน้า " + pMax6 + "% ยังไม่พบสัญญาณฝนหนัก"];
+  }
+  $("advice").dataset.t = adv[0];
+  $("advIco").textContent = adv[1];
+  $("advT").textContent = adv[2];
+  $("advD").textContent = adv[3];
+
   checkAlarm(lvlIdx(soon), soon, eta);
-  updateFastAIData();
 }
 
 /* ---------- ระบบ Alarm ---------- */
@@ -474,10 +503,10 @@ document.addEventListener("pointerdown", audioReady, { once: true });
 
 function alarmState() {
   const ok = ctx && ctx.state === "running";
-  $("alarmBtn").textContent = alarmOn ? "🔕 ปิดระบบ Alarm" : "🔔 เปิดระบบ Alarm";
+  $("alarmBtn").setAttribute("aria-checked", alarmOn ? "true" : "false");
   $("alarmState").textContent = alarmOn
-    ? "Alarm เปิดอยู่ " + (ok ? "เสียงพร้อมใช้งาน ✓" : "แตะที่ใดก็ได้บนหน้านี้เพื่อเปิดเสียง")
-    : "Alarm ปิดอยู่ กด “เปิดระบบ Alarm” เพื่อให้เตือนเมื่อฝนจะตกหนัก";
+    ? (ok ? "เปิดอยู่ เสียงพร้อมใช้งาน" : "เปิดอยู่ แตะหน้าจอ 1 ครั้งเพื่อเปิดเสียง")
+    : "ปิดอยู่ เปิดเพื่อให้เตือนเมื่อฝนจะตกหนัก";
 }
 
 async function keepAwake() {
@@ -561,7 +590,7 @@ const RAMP = [
 let rm = null, rmTiles = null, rmLabels = null, rmHeat = null, rmHome = null, rmRing = null, rmCenter = null;
 let rmData = null, rmHour = 0, rmTimer = null;
 
-const isDark = () => getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() === "#0a1420";
+const isDark = () => getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() === "#050608";
 /* แหล่งภาพแผนที่: CARTO เริ่มบังคับใช้ API key (ไม่มีคีย์จะมีลายน้ำ "API KEY REQUIRED")
    จึงใช้ Esri Gray Canvas ที่ไม่ต้องมีคีย์เป็นค่าเริ่มต้น
    ถ้าขอคีย์ฟรีที่ https://www.carto.com/basemaps/apikey/ แล้วใส่ใน CARTO_KEY จะใช้แผนที่ CARTO แทน */
@@ -735,128 +764,6 @@ function buildChips() {
   showHour();
 }
 
-
-/* ---------- FAST AI Analyst ---------- */
-/*
-  ใส่ URL ของ Backend ของคุณตรงนี้
-  ตัวอย่าง: https://fast-ai-xxxx.workers.dev/api/fast-ai
-  ห้ามใส่ OpenAI API Key ในไฟล์นี้
-*/
-const FAST_AI_BACKEND = "YOUR-BACKEND-URL/api/fast-ai";
-
-let fastAIData = {
-  location: null,
-  temperature: null,
-  humidity: null,
-  currentRain: null,
-  maxRain6h: null,
-  sumRain24h: null,
-  risk: null,
-  riskLevel: null,
-  updated: null
-};
-
-function updateFastAIData() {
-  fastAIData.location = loc ? (loc.name || `${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`) : null;
-  fastAIData.updated = new Date().toISOString();
-
-  $("aiTemp").textContent = $("sTemp").textContent === "--" ? "--" : $("sTemp").textContent + "°C";
-  $("aiRain").textContent = $("sRain").textContent === "--" ? "--" : $("sRain").textContent + " มม.";
-  $("aiMax").textContent = $("sMax").textContent === "--" ? "--" : $("sMax").textContent + " มม./ชม.";
-  $("aiSum").textContent = $("sSum").textContent === "--" ? "--" : $("sSum").textContent + " มม.";
-  $("aiRisk").textContent = $("num").textContent === "--" ? "--" : $("num").textContent + "%";
-  $("aiPlace").textContent = fastAIData.location || "--";
-
-  fastAIData.temperature = $("sTemp").textContent;
-  fastAIData.humidity = $("sHum").textContent;
-  fastAIData.currentRain = $("sRain").textContent;
-  fastAIData.maxRain6h = $("sMax").textContent;
-  fastAIData.sumRain24h = $("sSum").textContent;
-  fastAIData.risk = $("num").textContent;
-  fastAIData.riskLevel = $("lvl").textContent;
-}
-
-function openFastAI() {
-  updateFastAIData();
-  $("aiModal").classList.add("on");
-  $("aiInput").focus();
-}
-
-function closeFastAI() {
-  $("aiModal").classList.remove("on");
-}
-
-function addAIMessage(text, who) {
-  const el = document.createElement("div");
-  el.className = "ai-msg " + who;
-  el.textContent = text;
-  $("aiChat").appendChild(el);
-  $("aiChat").scrollTop = $("aiChat").scrollHeight;
-}
-
-async function askFastAI(question) {
-  updateFastAIData();
-
-  if (!question.trim()) return;
-
-  addAIMessage(question, "user");
-
-  if (FAST_AI_BACKEND.includes("YOUR-BACKEND-URL")) {
-    addAIMessage("ยังไม่ได้เชื่อมต่อ FAST AI Backend กรุณาใส่ URL ของ Backend ในโค้ดก่อน", "bot");
-    return;
-  }
-
-  const loading = document.createElement("div");
-  loading.className = "ai-msg bot";
-  loading.textContent = "กำลังวิเคราะห์ข้อมูลของ FAST...";
-  $("aiChat").appendChild(loading);
-  $("aiChat").scrollTop = $("aiChat").scrollHeight;
-
-  try {
-    const res = await fetch(FAST_AI_BACKEND, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        question,
-        data: fastAIData
-      })
-    });
-
-    if (!res.ok) throw new Error("HTTP " + res.status);
-
-    const result = await res.json();
-    loading.remove();
-
-    addAIMessage(
-      result.answer || "ยังไม่มีคำตอบจาก AI",
-      "bot"
-    );
-  } catch (e) {
-    console.error(e);
-    loading.remove();
-    addAIMessage("เชื่อมต่อ FAST AI ไม่สำเร็จ กรุณาตรวจสอบ Backend และอินเทอร์เน็ต", "bot");
-  }
-}
-
-$("aiFab").onclick = openFastAI;
-$("aiClose").onclick = closeFastAI;
-
-$("aiModal").addEventListener("click", e => {
-  if (e.target === $("aiModal")) closeFastAI();
-});
-
-document.querySelectorAll("[data-ai-q]").forEach(btn => {
-  btn.addEventListener("click", () => askFastAI(btn.dataset.aiQ));
-});
-
-$("aiForm").addEventListener("submit", e => {
-  e.preventDefault();
-  const q = $("aiInput").value.trim();
-  if (!q) return;
-  $("aiInput").value = "";
-  askFastAI(q);
-});
-
 /* ---------- เริ่มทำงาน ---------- */
 $("gps").onclick = startAuto;
 $("alarmBtn").onclick = toggleAlarm;
@@ -866,7 +773,7 @@ $("rmLocate").onclick = () => { if (rm && loc) rm.setView([loc.lat, loc.lon], 11
 let themeRot = 0;
 $("theme").onclick = () => {
   const r = document.documentElement;
-  const dark = getComputedStyle(r).getPropertyValue("--bg").trim() === "#0a1420";
+  const dark = getComputedStyle(r).getPropertyValue("--bg").trim() === "#050608";
   const apply = () => { r.setAttribute("data-theme", dark ? "light" : "dark"); rmTheme(); };
   themeRot += 180;
   $("themeIcon").style.transform = "rotate(" + themeRot + "deg)";

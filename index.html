@@ -155,6 +155,12 @@ footer{text-align:center;color:var(--mute);font-size:.78rem;margin-top:28px}
 .home-pin{width:22px;height:22px;border-radius:50%;background:var(--crit);border:3px solid #fff;box-shadow:0 0 0 0 rgba(211,48,58,.6);animation:ring 2s infinite}
 @keyframes ring{70%{box-shadow:0 0 0 16px rgba(211,48,58,0)}100%{box-shadow:0 0 0 0 rgba(211,48,58,0)}}
 @media (prefers-reduced-motion:reduce){.home-pin{animation:none}}
+.rm-seg{display:flex;gap:8px;padding:0 20px 14px;overflow-x:auto;scrollbar-width:none}
+.rm-seg::-webkit-scrollbar{display:none}
+.rm-seg button{flex:0 0 auto;padding:8px 15px;border-radius:999px;font-size:.88rem;font-weight:600;color:var(--mute)}
+.rm-seg button[aria-selected="true"]{background:linear-gradient(135deg,var(--water),#6366f1);color:#fff;border-color:transparent;box-shadow:0 6px 16px color-mix(in srgb,var(--water) 32%,transparent)}
+.chips[hidden]{display:none}
+.rm-note a{color:var(--water)}
 .leaflet-container{font-family:inherit}
 /* แอนิเมชันเปลี่ยนโหมดสี: วงกลมขยายออกจากปุ่ม (View Transitions) */
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
@@ -249,9 +255,15 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
     <div class="rm-head">
       <div>
         <h2>🗺️ Flood Risk Map</h2>
-        <div class="sub">พยากรณ์ความเสี่ยงน้ำท่วมรอบตัวคุณ 1–6 ชั่วโมงข้างหน้า</div>
+        <div class="sub">ความเสี่ยงน้ำท่วม ฝน และเมฆ ล่วงหน้า 1–6 ชั่วโมง พร้อมเรดาร์ฝนจริง</div>
       </div>
       <button id="rmPlay" type="button">▶ เล่นต่อเนื่อง</button>
+    </div>
+    <div class="rm-seg" id="rmSeg" role="tablist" aria-label="เลือกชั้นข้อมูลแผนที่">
+      <button type="button" role="tab" data-m="risk" aria-selected="true">⚠️ ความเสี่ยงน้ำท่วม</button>
+      <button type="button" role="tab" data-m="rain" aria-selected="false">🌧️ ฝนพยากรณ์</button>
+      <button type="button" role="tab" data-m="cloud" aria-selected="false">☁️ เมฆ</button>
+      <button type="button" role="tab" data-m="radar" aria-selected="false">📡 เรดาร์ฝน</button>
     </div>
     <div class="rm-wrap">
       <div id="rmap" role="region" aria-label="แผนที่ความเสี่ยงน้ำท่วม"></div>
@@ -265,7 +277,7 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
     </div>
     <div class="chips" id="chips" role="group" aria-label="เลือกชั่วโมงที่ต้องการดู"></div>
     <div class="rm-info" id="rmInfo">กำลังโหลดแผนที่ความเสี่ยง...</div>
-    <div class="sub" style="padding:0 20px 18px;font-size:.8rem">ข้อมูลฝนจากแบบจำลองสภาพอากาศ (Open-Meteo) ใช้จุดตรวจห่างกันราว 4–5 กม. ภาพเป็นการประมาณค่าระหว่างจุด ใช้ดูแนวโน้มเท่านั้น ตัวเลขใต้ปุ่มคือความเสี่ยง ณ ตำแหน่งของคุณ</div>
+    <div class="sub rm-note" style="padding:0 20px 18px;font-size:.8rem">ความเสี่ยง ฝน และเมฆ: พยากรณ์จากแบบจำลองของ Open-Meteo ภาพเป็นการประมาณค่าระหว่างจุดตรวจ ใช้ดูแนวโน้มเท่านั้น • เรดาร์ฝน: ข้อมูลจริงย้อนหลัง 2 ชั่วโมงจาก <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> ตัวเลขใต้ปุ่มเวลาคือค่า ณ ตำแหน่งของคุณ</div>
   </section>
 
   <div class="stats">
@@ -589,6 +601,7 @@ const RAMP = [
 ];
 let rm = null, rmTiles = null, rmLabels = null, rmHeat = null, rmHome = null, rmRing = null, rmCenter = null;
 let rmData = null, rmHour = 0, rmTimer = null;
+let rmMode = "risk", wxData = null, wxErr = false, wxBusy = false, rmCloud = null, rmRain = null;
 
 const isDark = () => getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() === "#050608";
 /* แหล่งภาพแผนที่: CARTO เริ่มบังคับใช้ API key (ไม่มีคีย์จะมีลายน้ำ "API KEY REQUIRED")
@@ -667,6 +680,9 @@ function ensureMap() {
   rm.createPane("labels");
   rm.getPane("labels").style.zIndex = 450;            /* ชื่อสถานที่อยู่เหนือสี heatmap */
   rm.getPane("labels").style.pointerEvents = "none";
+  [["cloud", 405], ["rainfx", 410], ["radar", 420]].forEach(([n, z]) => {   /* ลำดับชั้น: เมฆ < ฝน < เรดาร์ < ชื่อสถานที่ */
+    rm.createPane(n); rm.getPane(n).style.zIndex = z; rm.getPane(n).style.pointerEvents = "none";
+  });
   rmTiles = L.tileLayer(t.base, { maxZoom: t.max, subdomains: t.sub, attribution: t.attr }).addTo(rm);
   rmLabels = L.tileLayer(t.labels, { maxZoom: t.max, subdomains: t.sub, pane: "labels" }).addTo(rm);
   rmRing = L.circle([loc.lat, loc.lon], { radius: 5000, color: "#4cb4ec", weight: 1.5, dashArray: "6 6", fill: false, interactive: false }).addTo(rm);
@@ -712,45 +728,227 @@ async function loadMap() {
   }
 }
 
-function drawMap() {
-  if (!rmData) return;
-  const R = rmData.risks;
-  document.querySelectorAll(".chip").forEach(b => {
-    const v = R[+b.dataset.h][MID];
-    b.querySelector("span").textContent = v + "%";
-    b.style.setProperty("--c", LV[lvlIdx(v)].c);
-  });
-  if (ensureMap()) {
-    const url = heatURL(R[rmHour]);
-    if (rmHeat) { rmHeat.setUrl(url); rmHeat.setBounds(rmData.bounds); }
-    else rmHeat = L.imageOverlay(url, rmData.bounds, { interactive: false }).addTo(rm);
+/* ---------- ชั้นข้อมูลแผนที่: ความเสี่ยง / ฝนพยากรณ์ / เมฆ / เรดาร์ฝน ---------- */
+const WN = 9, WSTEP = 0.25, WMID = (WN * WN - 1) / 2;   // ตาราง 9x9 จุด ห่างกัน 0.25° (ราว 28 กม.) ครอบคลุมรัศมีราว 110 กม.
+const RAIN_RAMP = [
+  [0, [120, 200, 255, 0]], [0.1, [120, 200, 255, 0.30]], [0.5, [64, 156, 255, 0.52]], [1, [37, 110, 235, 0.62]],
+  [2.5, [22, 190, 120, 0.68]], [5, [250, 220, 40, 0.74]], [10, [251, 146, 60, 0.80]], [20, [239, 68, 68, 0.85]], [40, [190, 18, 160, 0.90]]
+];
+function lerpRamp(R, v) {
+  if (v <= R[0][0]) return R[0][1];
+  for (let k = 1; k < R.length; k++) {
+    if (v <= R[k][0]) {
+      const [v0, c0] = R[k - 1], [v1, c1] = R[k], t = (v - v0) / (v1 - v0);
+      return c0.map((x, i) => x + (c1[i] - x) * t);
+    }
   }
-  showHour();
+  return R[R.length - 1][1];
+}
+const rainColor = v => lerpRamp(RAIN_RAMP, v);
+const cloudColor = c => { const t = Math.max(0, Math.min(1, c / 100)); return [232 - 42 * t, 238 - 38 * t, 248 - 30 * t, Math.pow(t, 1.4) * 0.6]; };
+const rgbOf = c => "rgb(" + c.slice(0, 3).map(Math.round).join(",") + ")";
+const rainWord = v => v < 0.1 ? "ไม่มีฝน" : v < 2.5 ? "ฝนเบา" : v < 7.6 ? "ฝนปานกลาง" : v < 20 ? "ฝนหนัก" : "ฝนหนักมาก";
+const hhmm = t => new Date(t * 1000).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false });
+const rv = { layers: [], frames: [], idx: 0, at: 0, error: false };
+const LEG = {
+  risk: ["linear-gradient(90deg,#2ecc71 0%,#facc15 45%,#fb923c 60%,#ef4444 80%,#be123c 100%)", ["0%", "25%", "50%", "75%", "100%"]],
+  rain: ["linear-gradient(90deg,rgba(120,200,255,.55),#409cff,#256eeb,#16be78,#fadc28,#fb923c,#ef4444,#be12a0)", ["0.1", "1", "2.5", "10", "40+ มม./ชม."]],
+  cloud: ["linear-gradient(90deg,rgba(232,238,248,.12),rgba(190,200,218,.95))", ["โปร่ง", "บางส่วน", "ครึ้ม"]],
+  radar: ["linear-gradient(90deg,#a5d5ff,#409cff,#256eeb,#1c3fb5)", ["เบา", "ปานกลาง", "หนัก"]]
+};
+
+function regionBounds() {
+  const h = (WN - 1) / 2 * WSTEP, dl = h / Math.cos(loc.lat * Math.PI / 180);
+  return [[loc.lat - h, loc.lon - dl], [loc.lat + h, loc.lon + dl]];
 }
 
-function showHour() {
+/* วาดสนามค่า (ฝน/เมฆ) จากตาราง n x n เป็นภาพสีเรียบๆ ด้วยการประมาณค่าระหว่างจุด */
+function fieldURL(vals, n, colorFn, S) {
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = S;
+  const g = cv.getContext("2d"), img = g.createImageData(S, S), sm = t => t * t * (3 - 2 * t);
+  for (let y = 0; y < S; y++) {
+    const gy = y / (S - 1) * (n - 1), y0 = Math.min(n - 2, Math.floor(gy)), ty = sm(gy - y0);
+    for (let x = 0; x < S; x++) {
+      const gx = x / (S - 1) * (n - 1), x0 = Math.min(n - 2, Math.floor(gx)), tx = sm(gx - x0);
+      const a = vals[y0 * n + x0], b = vals[y0 * n + x0 + 1], c = vals[(y0 + 1) * n + x0], d = vals[(y0 + 1) * n + x0 + 1];
+      const v = (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + d * tx) * ty;
+      const col = colorFn(v), k = (y * S + x) * 4;
+      const m = Math.max(0, Math.min(1, Math.min(x, S - 1 - x, y, S - 1 - y) / (S * 0.1)));   /* ขอบจางลง ไม่เห็นเป็นกรอบสี่เหลี่ยม */
+      img.data[k] = col[0]; img.data[k + 1] = col[1]; img.data[k + 2] = col[2]; img.data[k + 3] = col[3] * 255 * m;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  return cv.toDataURL();
+}
+
+/* พยากรณ์ฝน+เมฆรอบตัว 0-6 ชม. (ดึงเมื่อเปิดชั้นข้อมูลนี้ และเก็บไว้ 30 นาที) */
+async function loadWx() {
+  if (!loc || wxBusy) return;
+  if (wxData && Date.now() - wxData.at < 30 * 60 * 1000 && distKm(wxData.lat, wxData.lon, loc.lat, loc.lon) < 5) return;
+  wxBusy = true; wxErr = false;
+  try {
+    const half = (WN - 1) / 2, dLon = WSTEP / Math.cos(loc.lat * Math.PI / 180), lats = [], lons = [];
+    for (let r = 0; r < WN; r++) for (let c = 0; c < WN; c++) {
+      lats.push((loc.lat + (half - r) * WSTEP).toFixed(3));
+      lons.push((loc.lon + (c - half) * dLon).toFixed(3));
+    }
+    const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=" + lats.join(",") + "&longitude=" + lons.join(",") +
+      "&current=precipitation,cloud_cover&hourly=precipitation,cloud_cover&forecast_days=2&timezone=auto");
+    if (!res.ok) throw new Error(res.status);
+    let arr = await res.json();
+    if (!Array.isArray(arr)) arr = [arr];
+    if (arr.length !== WN * WN) throw new Error("grid");
+    const rain = Array.from({ length: 7 }, () => []), cloud = Array.from({ length: 7 }, () => []);
+    let times = [];
+    arr.forEach(d => {
+      const key = d.current.time.slice(0, 13);
+      let i = d.hourly.time.findIndex(t => t.slice(0, 13) >= key);
+      if (i < 0) i = 0;
+      for (let h = 0; h <= 6; h++) {
+        rain[h].push(+((h === 0 ? d.current.precipitation : d.hourly.precipitation[i + h]) || 0));
+        cloud[h].push(Math.round((h === 0 ? d.current.cloud_cover : d.hourly.cloud_cover[i + h]) || 0));
+      }
+      if (!times.length) times = [0, 1, 2, 3, 4, 5, 6].map(h => (d.hourly.time[i + h] || "").slice(11, 16));
+    });
+    wxData = { rain, cloud, times, at: Date.now(), lat: loc.lat, lon: loc.lon, bounds: [[+lats[WN * WN - 1], +lons[0]], [+lats[0], +lons[WN - 1]]] };
+  } catch (e) {
+    console.error(e);
+    wxErr = true;
+  } finally { wxBusy = false; }
+}
+
+/* เรดาร์ฝนจริงย้อนหลัง 2 ชม. จาก RainViewer (ฟรี ไม่ต้องมีคีย์ ต้องให้เครดิต) */
+async function loadRadar() {
+  if (!ensureMap()) return;
+  if (rv.layers.length && Date.now() - rv.at < 5 * 60 * 1000) return;
+  try {
+    const r = await fetch("https://api.rainviewer.com/public/weather-maps.json");
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json(), past = (j.radar && j.radar.past) || [];
+    if (!past.length) throw new Error("no frames");
+    rv.layers.forEach(l => rm.removeLayer(l));
+    const pick = past.filter((_, i) => (past.length - 1 - i) % 2 === 0);   /* เฟรมละ 20 นาที จบที่เฟรมล่าสุด */
+    rv.frames = pick.map(f => f.time);
+    rv.layers = pick.map((f, k) => L.tileLayer(j.host + f.path + "/256/{z}/{x}/{y}/2/1_1.png", {
+      opacity: 0, maxNativeZoom: 10, maxZoom: 16, pane: "radar",
+      attribution: k ? "" : 'เรดาร์ © <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>'
+    }).addTo(rm));
+    rv.idx = rv.frames.length - 1; rv.at = Date.now(); rv.error = false;
+  } catch (e) {
+    console.error(e);
+    rv.error = true;
+  }
+}
+
+/* ค่าและสีที่แสดงบนปุ่มชั่วโมง ตามชั้นข้อมูลที่เลือก */
+function chipVals() {
+  const out = [];
+  for (let o = 0; o <= 6; o++) {
+    if (rmMode === "risk" && rmData) { const v = rmData.risks[o][MID]; out.push([v + "%", LV[lvlIdx(v)].c]); }
+    else if (rmMode === "rain" && wxData) { const v = wxData.rain[o][WMID]; out.push([v.toFixed(1) + " มม.", v < 0.1 ? "var(--mute)" : rgbOf(rainColor(v))]); }
+    else if (rmMode === "cloud" && wxData) out.push([wxData.cloud[o][WMID] + "%", "#94a3b8"]);
+    else out.push(["--", ""]);
+  }
+  return out;
+}
+
+function setLegend() {
+  const [bg, ticks] = LEG[rmMode];
+  document.querySelector(".rm-bar").style.background = bg;
+  document.querySelector(".rm-ticks").innerHTML = ticks.map(t => "<span>" + t + "</span>").join("");
+}
+
+function showInfo() {
+  let badge = rmHour ? "+" + rmHour + " ชม." : "ตอนนี้", info = "";
+  if (rmMode === "risk") {
+    if (!rmData) info = "กำลังโหลดแผนที่ความเสี่ยง...";
+    else {
+      const R = rmData.risks, here = R[rmHour][MID], area = Math.max(...R[rmHour]);
+      let pk = 0;
+      for (let o = 1; o <= 6; o++) if (R[o][MID] > R[pk][MID]) pk = o;
+      const L1 = LV[lvlIdx(here)], L2 = LV[lvlIdx(R[pk][MID])];
+      info = "ที่ตำแหน่งของคุณ" + (rmHour ? " ในอีก " + rmHour + " ชม." : " ตอนนี้") + ": <b style=\"color:" + L1.c + "\">" + here + "% (" + L1.name + ")</b>" +
+        " สูงสุดในพื้นที่ " + area + "%<br>" +
+        "ช่วงที่เสี่ยงที่สุดใน 6 ชม. ข้างหน้า: <b style=\"color:" + L2.c + "\">" + (pk ? "+" + pk + " ชม." : "ตอนนี้") + " (" + R[pk][MID] + "%)</b>";
+    }
+  } else if (rmMode === "radar") {
+    if (rv.error) info = "ไม่สามารถโหลดเรดาร์ฝนได้ในขณะนี้ อาจไม่มีเรดาร์ครอบคลุมพื้นที่ หรือบริการขัดข้อง";
+    else if (!rv.layers.length) info = "กำลังโหลดเรดาร์ฝน...";
+    else {
+      badge = "เรดาร์ " + hhmm(rv.frames[rv.idx]) + " น.";
+      info = "เรดาร์ฝนจริงย้อนหลัง 2 ชั่วโมง (เฟรมละ 20 นาที) สีเข้มขึ้น = ฝนหนักขึ้น กดเล่นเพื่อดูการเคลื่อนที่ของกลุ่มฝน<br>นี่คือข้อมูลที่ตรวจวัดแล้ว ไม่ใช่การพยากรณ์ และดูได้เฉพาะพื้นที่ที่มีเรดาร์ครอบคลุม";
+    }
+  } else if (wxErr) info = "โหลดข้อมูลพยากรณ์ฝนและเมฆไม่สำเร็จ ลองกดเปลี่ยนชั้นข้อมูลอีกครั้ง";
+  else if (!wxData) info = "กำลังโหลดข้อมูลพยากรณ์ฝนและเมฆ...";
+  else {
+    const rn = wxData.rain[rmHour], cl = wxData.cloud[rmHour], here = rn[WMID], mxr = Math.max(...rn);
+    badge += " · " + wxData.times[rmHour];
+    info = "ที่ตำแหน่งของคุณ" + (rmHour ? " ในอีก " + rmHour + " ชม." : " ตอนนี้") + ": <b>" + rainWord(here) + " (" + here.toFixed(1) + " มม./ชม.)</b> เมฆปกคลุม <b>" + cl[WMID] + "%</b><br>" +
+      "ฝนสูงสุดในพื้นที่ " + mxr.toFixed(1) + " มม./ชม. • ครอบคลุมรัศมีราว 110 กม. แบบจำลองละเอียดราว 25 กม. จึงเห็นเป็นกลุ่มฝนกว้างๆ";
+  }
+  $("rmBadge").textContent = badge;
+  $("rmInfo").innerHTML = info;
+}
+
+/* วาดทุกอย่างตามชั้นข้อมูลและชั่วโมงที่เลือก */
+function renderLayer() {
+  const vals = chipVals();
   document.querySelectorAll(".chip").forEach(b => {
-    const on = +b.dataset.h === rmHour;
+    const o = +b.dataset.h, on = o === rmHour;
+    b.querySelector("span").textContent = vals[o][0];
+    b.style.setProperty("--c", vals[o][1] || "var(--line)");
     b.classList.toggle("on", on);
     b.setAttribute("aria-pressed", on);
   });
-  $("rmBadge").textContent = rmHour ? "+" + rmHour + " ชม." : "ตอนนี้";
-  if (!rmData) return;
-  const R = rmData.risks, here = R[rmHour][MID], area = Math.max(...R[rmHour]);
-  let pk = 0;
-  for (let o = 1; o <= 6; o++) if (R[o][MID] > R[pk][MID]) pk = o;
-  const L1 = LV[lvlIdx(here)], L2 = LV[lvlIdx(R[pk][MID])];
-  $("rmInfo").innerHTML =
-    "ที่ตำแหน่งของคุณ" + (rmHour ? " ในอีก " + rmHour + " ชม." : " ตอนนี้") + ": <b style=\"color:" + L1.c + "\">" + here + "% (" + L1.name + ")</b>" +
-    " สูงสุดในพื้นที่ " + area + "%<br>" +
-    "ช่วงที่เสี่ยงที่สุดใน 6 ชม. ข้างหน้า: <b style=\"color:" + L2.c + "\">" + (pk ? "+" + pk + " ชม." : "ตอนนี้") + " (" + R[pk][MID] + "%)</b>";
+  $("chips").hidden = rmMode === "radar";
+  document.querySelectorAll("#rmSeg button").forEach(b => b.setAttribute("aria-selected", b.dataset.m === rmMode));
+  setLegend();
+  if (ensureMap()) {
+    const m = rmMode;
+    if (rmData) {
+      const url = heatURL(rmData.risks[rmHour]);
+      if (rmHeat) { rmHeat.setUrl(url); rmHeat.setBounds(rmData.bounds); }
+      else rmHeat = L.imageOverlay(url, rmData.bounds, { interactive: false }).addTo(rm);
+    }
+    if (wxData && (m === "rain" || m === "cloud")) {
+      const cu = fieldURL(wxData.cloud[rmHour], WN, cloudColor, 200), ru = fieldURL(wxData.rain[rmHour], WN, rainColor, 200);
+      if (rmCloud) { rmCloud.setUrl(cu); rmCloud.setBounds(wxData.bounds); rmRain.setUrl(ru); rmRain.setBounds(wxData.bounds); }
+      else {
+        rmCloud = L.imageOverlay(cu, wxData.bounds, { interactive: false, pane: "cloud" }).addTo(rm);
+        rmRain = L.imageOverlay(ru, wxData.bounds, { interactive: false, pane: "rainfx" }).addTo(rm);
+      }
+    }
+    if (rmHeat) rmHeat.setOpacity(m === "risk" ? 1 : 0);
+    if (rmCloud) { rmCloud.setOpacity(m === "cloud" ? 1 : m === "rain" ? 0.5 : 0); rmRain.setOpacity(m === "rain" ? 1 : 0); }
+    rmRing.setStyle({ opacity: m === "risk" ? 1 : 0 });
+    rv.layers.forEach((l, k) => l.setOpacity(m === "radar" && k === rv.idx ? 0.85 : 0));
+  }
+  showInfo();
 }
-function setHour(o) { rmHour = o; drawMap(); }
+function drawMap() { renderLayer(); }
+function setHour(o) { rmHour = o; renderLayer(); }
+
+async function setMode(m) {
+  if (m === rmMode) return;
+  if (rmTimer) togglePlay();
+  rmMode = m;
+  renderLayer();
+  if (!loc || !ensureMap()) return;
+  if (m === "risk") rm.setView([loc.lat, loc.lon], 11);
+  else rm.fitBounds(regionBounds(), { padding: [8, 8] });
+  if (m === "rain" || m === "cloud") await loadWx();
+  else if (m === "radar") await loadRadar();
+  if (rmMode === m) renderLayer();
+}
 
 function togglePlay() {
   if (rmTimer) { clearInterval(rmTimer); rmTimer = null; $("rmPlay").textContent = "▶ เล่นต่อเนื่อง"; return; }
   $("rmPlay").textContent = "⏸ หยุด";
-  rmTimer = setInterval(() => setHour((rmHour + 1) % 7), 1400);
+  rmTimer = setInterval(() => {
+    if (rmMode === "radar") { if (rv.layers.length) { rv.idx = (rv.idx + 1) % rv.layers.length; renderLayer(); } }
+    else setHour((rmHour + 1) % 7);
+  }, rmMode === "radar" ? 700 : 1400);
 }
 function buildChips() {
   $("chips").innerHTML = "";
@@ -761,7 +959,7 @@ function buildChips() {
     b.onclick = () => { if (rmTimer) togglePlay(); setHour(o); };
     $("chips").appendChild(b);
   }
-  showHour();
+  renderLayer();
 }
 
 /* ---------- เริ่มทำงาน ---------- */
@@ -769,7 +967,16 @@ $("gps").onclick = startAuto;
 $("alarmBtn").onclick = toggleAlarm;
 $("alarmOk").onclick = ackAlarm;
 $("rmPlay").onclick = togglePlay;
-$("rmLocate").onclick = () => { if (rm && loc) rm.setView([loc.lat, loc.lon], 11); };
+$("rmLocate").onclick = () => {
+  if (!rm || !loc) return;
+  if (rmMode === "risk") rm.setView([loc.lat, loc.lon], 11); else rm.fitBounds(regionBounds(), { padding: [8, 8] });
+};
+$("rmSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setMode(b.dataset.m); });
+/* ชั้นฝน/เมฆ/เรดาร์ที่เปิดค้างไว้ อัปเดตเองทุก 10 นาที */
+setInterval(async () => {
+  if (rmMode === "rain" || rmMode === "cloud") { await loadWx(); renderLayer(); }
+  else if (rmMode === "radar") { await loadRadar(); renderLayer(); }
+}, 10 * 60 * 1000);
 let themeRot = 0;
 $("theme").onclick = () => {
   const r = document.documentElement;

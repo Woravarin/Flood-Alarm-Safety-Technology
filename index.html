@@ -192,14 +192,18 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
 /* หน้าแผนที่สถานีน้ำ (เปิดเต็มจอ) */
 .wl-row[data-ws],.wl-main[data-ws]{cursor:pointer}
 .wl-row[data-ws]:hover{background:var(--panel2)}
-.wrap{transition:transform .5s cubic-bezier(.32,.72,0,1)}
-html.ws-open .wrap{transform:translateY(100vh)}
-.ws{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);color:var(--text);
-  visibility:hidden;transform:translateY(100%);border-radius:22px 22px 0 0;box-shadow:0 -14px 44px rgba(0,0,0,.28);
-  transition:transform .5s cubic-bezier(.32,.72,0,1),border-radius .5s cubic-bezier(.32,.72,0,1),visibility 0s linear .5s}
+/* ขากลับ: หน้าหลักเด้งขึ้นมาแบบสปริง / ขาเข้า: หน้าหลักค่อยๆ เลื่อนลงและจางลง */
+.wrap{transition:transform .7s cubic-bezier(.34,1.56,.64,1),opacity .4s ease}
+html.ws-open .wrap{transform:translateY(100vh);opacity:.35;transition:transform .55s cubic-bezier(.5,0,.2,1),opacity .55s ease}
+/* หน้าสถานี: เด้งขึ้นจากล่างจอแบบสปริง (ล้นขึ้นไปนิดหนึ่งแล้วเด้งกลับ) ตอนปิดจะดึงขึ้นนิดหนึ่งก่อนร่วงลง */
+.ws{position:fixed;top:0;left:0;right:0;bottom:-12vh;padding-bottom:12vh;z-index:90;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);color:var(--text);
+  visibility:hidden;transform:translateY(100%);border-radius:28px 28px 0 0;box-shadow:0 -14px 44px rgba(0,0,0,.28);
+  transition:transform .45s cubic-bezier(.6,-.28,.735,.045),border-radius .45s ease,visibility 0s linear .45s}
 .ws.on{visibility:visible;transform:none;border-radius:0;
-  transition:transform .5s cubic-bezier(.32,.72,0,1),border-radius .5s cubic-bezier(.32,.72,0,1),visibility 0s}
-@media (prefers-reduced-motion:reduce){.wrap,.ws,.ws.on{transition:none}}
+  transition:transform .7s cubic-bezier(.34,1.45,.5,1),border-radius .7s ease,visibility 0s}
+.ws-top .icon-btn{width:42px;height:42px;flex:none}
+.ws-top .icon-btn svg{width:22px;height:22px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.ws-top .icon-btn:hover svg{transform:translateX(-4px)}
 .ws-top{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
 .ws-top h2{flex:1;min-width:0;font-size:1.05rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ws-map{position:relative;flex:1;min-height:0;isolation:isolate}
@@ -218,6 +222,23 @@ html.ws-open .wrap{transform:translateY(100vh)}
 @media (prefers-reduced-motion:reduce){.ws-pin.hot .ws-label::after{animation:none}}
 .ws-label b{display:block;font-size:.78rem}
 .ws-label span{display:block;font-size:.68rem;color:var(--mute)}
+/* แอนิเมชันน่ารักๆ: หมุดหยดน้ำตกลงมาเด้งดึ๋ง ป้ายชื่อป๊อปขึ้น เนื้อหาแผงล่างเด้งเรียงทีละชิ้น */
+.ws-map.intro .ws-drop{transform-origin:50% 100%;animation:wsDrop .8s cubic-bezier(.3,1.2,.5,1) both;animation-delay:calc(.45s + var(--i,0) * 70ms)}
+.ws-map.intro .ws-label{transform-origin:50% 0;animation:wsLabel .6s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(.65s + var(--i,0) * 70ms)}
+.ws-pin.hop .ws-drop{transform-origin:50% 100%;animation:wsHop .55s cubic-bezier(.3,1.2,.5,1)}
+@keyframes wsDrop{0%{opacity:0;transform:translateY(-46px) scale(.7,1.35)}55%{opacity:1;transform:translateY(0) scale(1.25,.72)}75%{transform:translateY(-7px) scale(.94,1.08)}100%{opacity:1;transform:none}}
+@keyframes wsLabel{0%{opacity:0;transform:translateX(-50%) scale(.4)}60%{opacity:1;transform:translateX(-50%) scale(1.1)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes wsHop{0%{transform:none}35%{transform:translateY(-14px) scale(.92,1.12)}65%{transform:translateY(0) scale(1.18,.8)}100%{transform:none}}
+.ws-sheet>*{animation:wsUp .5s cubic-bezier(.34,1.4,.64,1) both;animation-delay:calc(var(--n,0) * 55ms)}
+.ws-map.intro~.ws-sheet>*{animation-name:wsUp2;animation-delay:calc(.35s + var(--n,0) * 70ms)}
+.ws-sheet>:nth-child(2){--n:1}.ws-sheet>:nth-child(3){--n:2}.ws-sheet>:nth-child(4){--n:3}.ws-sheet>:nth-child(5){--n:4}
+.ws-sheet>:nth-child(6){--n:5}.ws-sheet>:nth-child(7){--n:6}.ws-sheet>:nth-child(8){--n:7}
+@keyframes wsUp{0%{opacity:0;transform:translateY(16px) scale(.97)}55%{opacity:1;transform:translateY(-4px) scale(1.01)}100%{opacity:1;transform:none}}
+@keyframes wsUp2{0%{opacity:0;transform:translateY(16px) scale(.97)}55%{opacity:1;transform:translateY(-4px) scale(1.01)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .wrap,html.ws-open .wrap,.ws,.ws.on{transition:none}
+  .ws-map.intro .ws-drop,.ws-map.intro .ws-label,.ws-pin.hop .ws-drop,.ws-sheet>*,.ws-map.intro~.ws-sheet>*{animation:none!important}
+}
 .ws-map.far .ws-pin{transform:scale(.7)}
 .ws-map.far .ws-pin:not(.sel) .ws-label{display:none}
 .ws-sheet{background:var(--panel);border-top:1px solid var(--line);padding:16px 18px calc(16px + env(safe-area-inset-bottom,0px));max-height:44vh;overflow-y:auto;box-shadow:0 -10px 30px rgba(0,0,0,.12)}
@@ -378,7 +399,7 @@ html.ws-open .wrap{transform:translateY(100vh)}
 
 <div class="ws" id="ws" role="dialog" aria-modal="true" aria-labelledby="wsTitle">
   <div class="ws-top">
-    <button type="button" id="wsBack">← กลับ</button>
+    <button type="button" id="wsBack" class="icon-btn" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <h2 id="wsTitle">แผนที่สถานีวัดระดับน้ำ</h2>
     <button type="button" id="wsAll">ดูทั้งหมด</button>
   </div>
@@ -1225,11 +1246,11 @@ function wsEnsureMap() {
 const wsLabelMode = () => $("wsMapBox").classList.toggle("far", wm.getZoom() < 10.5);
 
 /* หมุดรูปหยดน้ำ มีกรอบสีล้อมรอบป้ายชื่อสถานี สีตามระดับน้ำที่สถานีรายงาน (ระดับสูงกรอบจะกระเพื่อม) */
-function wsIcon(s, sel) {
+function wsIcon(s, sel, i = 0, hop = false) {
   const hex = stState(s)[2], hot = s.sc !== null && s.fill > 70;
   return L.divIcon({
     className: "", iconSize: [0, 0], iconAnchor: [0, 0],
-    html: '<div class="ws-pin' + (sel ? " sel" : "") + (hot ? " hot" : "") + '" style="--c:' + hex + '">' +
+    html: '<div class="ws-pin' + (sel ? " sel" : "") + (hot ? " hot" : "") + (hop ? " hop" : "") + '" style="--c:' + hex + ';--i:' + Math.min(i, 12) + '">' +
       '<svg class="ws-drop" viewBox="0 0 24 32" aria-hidden="true"><path d="M12 0C5.4 0 0 5.2 0 11.6 0 20 12 32 12 32s12-12 12-20.4C24 5.2 18.6 0 12 0z"/><circle cx="12" cy="11.6" r="4.6"/></svg>' +
       '<div class="ws-label"><b>' + esc(s.name) + '</b><span>' + esc(s.sub || "") + '</span></div></div>'
   });
@@ -1244,8 +1265,8 @@ function wsBuild(fit) {
   if (sel && !list.some(s => s.key === sel.key)) list.push(Object.assign({}, sel, { d: wsDist(sel) }));
   wmMarkers.forEach(e => wm.removeLayer(e.m));
   wmMarkers.clear();
-  list.forEach(s => {
-    const m = L.marker([s.lat, s.lon], { icon: wsIcon(s, s.key === wsSel), zIndexOffset: wsZ(s, s.key === wsSel), keyboard: false, title: s.name })
+  list.forEach((s, i) => {
+    const m = L.marker([s.lat, s.lon], { icon: wsIcon(s, s.key === wsSel, i), zIndexOffset: wsZ(s, s.key === wsSel), keyboard: false, title: s.name })
       .on("click", () => wsSelect(s.key, true)).addTo(wm);
     wmMarkers.set(s.key, { m, s });
   });
@@ -1265,7 +1286,7 @@ function wsSelect(key, pan) {
   wsSel = key;
   [old, key].forEach(k => {
     const e = wmMarkers.get(k);
-    if (e) { e.m.setIcon(wsIcon(e.s, k === wsSel)); e.m.setZIndexOffset(wsZ(e.s, k === wsSel)); }
+    if (e) { e.m.setIcon(wsIcon(e.s, k === wsSel, 0, k === wsSel)); e.m.setZIndexOffset(wsZ(e.s, k === wsSel)); }
   });
   const e = wmMarkers.get(key);
   if (!e) return;
@@ -1296,7 +1317,7 @@ function wsSheet(s, list) {
       '<button type="button" class="ws-chip' + (o.key === s.key ? ' on' : '') + '" data-k="' + esc(o.key) + '"><i class="wl-dot" style="--c:' + stState(o)[1] + '"></i>' + esc(o.name) + ' <span>' + o.d.toFixed(0) + ' กม.</span></button>').join("") + '</div>';
 }
 
-let wsOpener = null;
+let wsOpener = null, wsIntroT = 0;
 function openWs(key) {
   if (!wlAll || !loc || !window.L || wsOpen) return;
   wsOpener = document.activeElement;
@@ -1306,6 +1327,8 @@ function openWs(key) {
   wsBuild(true);
   document.body.style.overflow = "hidden";
   $("page").inert = true;                                  // หน้าหลักเลื่อนลง และกันการกดทะลุระหว่างดูสถานี
+  $("wsMapBox").classList.add("intro");                     // เริ่มแอนิเมชันหมุดและแผงล่างเด้งเข้ามา
+  clearTimeout(wsIntroT); wsIntroT = setTimeout(() => $("wsMapBox").classList.remove("intro"), 2600);
   $("ws").classList.add("on");                             // หน้าสถานีเลื่อนขึ้นจากด้านล่างจอ
   document.documentElement.classList.add("ws-open");
   setTimeout(() => { if (wsOpen) { wm.invalidateSize(); $("wsBack").focus({ preventScroll: true }); } }, 80);
@@ -1313,11 +1336,12 @@ function openWs(key) {
 function closeWs() {
   if (!wsOpen) return;
   wsOpen = false;
+  clearTimeout(wsIntroT); $("wsMapBox").classList.remove("intro");
   $("ws").classList.remove("on");                          // หน้าสถานีเลื่อนลงกลับไปด้านล่าง
   document.documentElement.classList.remove("ws-open");    // หน้าหลักเลื่อนกลับขึ้นมา
   $("page").inert = false;
   if (wsOpener && wsOpener.isConnected) wsOpener.focus({ preventScroll: true });
-  setTimeout(() => { if (!wsOpen) document.body.style.overflow = ""; }, 520);
+  setTimeout(() => { if (!wsOpen) document.body.style.overflow = ""; }, 800);
 }
 
 document.addEventListener("click", e => {

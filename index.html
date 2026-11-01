@@ -192,8 +192,14 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
 /* หน้าแผนที่สถานีน้ำ (เปิดเต็มจอ) */
 .wl-row[data-ws],.wl-main[data-ws]{cursor:pointer}
 .wl-row[data-ws]:hover{background:var(--panel2)}
-.ws{position:fixed;inset:0;z-index:90;display:none;flex-direction:column;background:var(--bg);color:var(--text)}
-.ws.on{display:flex}
+.wrap{transition:transform .5s cubic-bezier(.32,.72,0,1)}
+html.ws-open .wrap{transform:translateY(100vh)}
+.ws{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);color:var(--text);
+  visibility:hidden;transform:translateY(100%);border-radius:22px 22px 0 0;box-shadow:0 -14px 44px rgba(0,0,0,.28);
+  transition:transform .5s cubic-bezier(.32,.72,0,1),border-radius .5s cubic-bezier(.32,.72,0,1),visibility 0s linear .5s}
+.ws.on{visibility:visible;transform:none;border-radius:0;
+  transition:transform .5s cubic-bezier(.32,.72,0,1),border-radius .5s cubic-bezier(.32,.72,0,1),visibility 0s}
+@media (prefers-reduced-motion:reduce){.wrap,.ws,.ws.on{transition:none}}
 .ws-top{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
 .ws-top h2{flex:1;min-width:0;font-size:1.05rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ws-map{position:relative;flex:1;min-height:0;isolation:isolate}
@@ -201,17 +207,15 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
 .ws-legend{position:absolute;z-index:600;left:12px;right:12px;top:12px;display:flex;gap:6px 14px;flex-wrap:wrap;padding:8px 12px;border-radius:14px;font-size:.76rem}
 .ws-legend span{display:inline-flex;align-items:center;gap:6px}
 .ws-legend small{color:var(--mute)}
-.ws-legend i{width:12px;height:12px;border-radius:50%;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 30%,transparent)}
-.ws-pin{position:relative;width:64px;height:64px;color:var(--c)}
-.ws-ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
-.ws-pin.hot .ws-ring::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--c);animation:wsping 2s ease-out infinite}
-@keyframes wsping{from{transform:scale(1);opacity:.7}to{transform:scale(1.5);opacity:0}}
-@media (prefers-reduced-motion:reduce){.ws-pin.hot .ws-ring::after{animation:none}}
-.ws-pin.sel .ws-ring{border-width:3px;background:color-mix(in srgb,var(--c) 24%,transparent)}
-.ws-drop{position:absolute;left:50%;bottom:50%;width:22px;height:30px;margin-left:-11px;fill:var(--c);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.ws-legend i{width:18px;height:12px;border-radius:4px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.ws-pin{position:relative;width:0;height:0;color:var(--c)}
+.ws-drop{position:absolute;left:-11px;bottom:0;width:22px;height:30px;fill:var(--c);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 .ws-drop circle{fill:#fff}
-.ws-label{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:2px;white-space:nowrap;text-align:center;padding:3px 9px;border-radius:9px;line-height:1.25;color:var(--text);background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none}
-.ws-pin.sel .ws-label{border-color:var(--c)}
+.ws-label{position:absolute;top:6px;left:0;transform:translateX(-50%);white-space:nowrap;text-align:center;padding:4px 10px;border-radius:10px;line-height:1.25;color:var(--text);background:color-mix(in srgb,var(--panel) 92%,transparent);border:2px solid var(--c);box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none}
+.ws-pin.sel .ws-label{border-width:3px;padding:3px 9px;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent),0 4px 14px rgba(0,0,0,.25)}
+.ws-pin.hot .ws-label::after{content:"";position:absolute;inset:-5px;border-radius:14px;border:2px solid var(--c);opacity:0;animation:wsping 2s ease-out infinite}
+@keyframes wsping{from{transform:scale(.96);opacity:.75}to{transform:scale(1.08);opacity:0}}
+@media (prefers-reduced-motion:reduce){.ws-pin.hot .ws-label::after{animation:none}}
 .ws-label b{display:block;font-size:.78rem}
 .ws-label span{display:block;font-size:.68rem;color:var(--mute)}
 .ws-map.far .ws-pin{transform:scale(.7)}
@@ -250,7 +254,7 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="page">
   <header class="top">
     <div class="brand">
       <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.5 3 4 5.2 4 7.2a4 4 0 0 1-8 0C8 8.2 9.5 6 12 3z"/><path d="M2 16c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 21c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/></svg></div>
@@ -368,12 +372,6 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
     </div>
   </section>
 
-  <div class="alarm" id="alarm" role="alertdialog" aria-live="assertive" aria-labelledby="alarmTitle">
-    <div style="font-size:4rem" aria-hidden="true">🚨</div>
-    <h2 id="alarmTitle"></h2>
-    <p id="alarmText"></p>
-    <button id="alarmOk" type="button">รับทราบ ปิดเสียง</button>
-  </div>
 
   <footer>ข้อมูลฝนจาก Open-Meteo • ระดับน้ำจาก ThaiWater • คำนวณความเสี่ยงเบื้องต้นจากปริมาณฝน โอกาสฝนตก และระดับน้ำที่สถานีใกล้เคียง ไม่ใช้แทนประกาศทางการ</footer>
 </div>
@@ -389,6 +387,13 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
     <div class="ws-legend glass" id="wsLegend"></div>
   </div>
   <div class="ws-sheet" id="wsSheet"></div>
+</div>
+
+  <div class="alarm" id="alarm" role="alertdialog" aria-live="assertive" aria-labelledby="alarmTitle">
+  <div style="font-size:4rem" aria-hidden="true">🚨</div>
+  <h2 id="alarmTitle"></h2>
+  <p id="alarmText"></p>
+  <button id="alarmOk" type="button">รับทราบ ปิดเสียง</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1219,12 +1224,12 @@ function wsEnsureMap() {
 }
 const wsLabelMode = () => $("wsMapBox").classList.toggle("far", wm.getZoom() < 10.5);
 
-/* หมุดรูปหยดน้ำ มีวงแหวนบางๆ ล้อมรอบ สีตามระดับน้ำที่สถานีรายงาน (ระดับสูงจะมีวงกระเพื่อม) */
+/* หมุดรูปหยดน้ำ มีกรอบสีล้อมรอบป้ายชื่อสถานี สีตามระดับน้ำที่สถานีรายงาน (ระดับสูงกรอบจะกระเพื่อม) */
 function wsIcon(s, sel) {
   const hex = stState(s)[2], hot = s.sc !== null && s.fill > 70;
   return L.divIcon({
-    className: "", iconSize: [64, 64], iconAnchor: [32, 32],
-    html: '<div class="ws-pin' + (sel ? " sel" : "") + (hot ? " hot" : "") + '" style="--c:' + hex + '"><i class="ws-ring"></i>' +
+    className: "", iconSize: [0, 0], iconAnchor: [0, 0],
+    html: '<div class="ws-pin' + (sel ? " sel" : "") + (hot ? " hot" : "") + '" style="--c:' + hex + '">' +
       '<svg class="ws-drop" viewBox="0 0 24 32" aria-hidden="true"><path d="M12 0C5.4 0 0 5.2 0 11.6 0 20 12 32 12 32s12-12 12-20.4C24 5.2 18.6 0 12 0z"/><circle cx="12" cy="11.6" r="4.6"/></svg>' +
       '<div class="ws-label"><b>' + esc(s.name) + '</b><span>' + esc(s.sub || "") + '</span></div></div>'
   });
@@ -1291,17 +1296,29 @@ function wsSheet(s, list) {
       '<button type="button" class="ws-chip' + (o.key === s.key ? ' on' : '') + '" data-k="' + esc(o.key) + '"><i class="wl-dot" style="--c:' + stState(o)[1] + '"></i>' + esc(o.name) + ' <span>' + o.d.toFixed(0) + ' กม.</span></button>').join("") + '</div>';
 }
 
+let wsOpener = null;
 function openWs(key) {
-  if (!wlAll || !loc || !window.L) return;
+  if (!wlAll || !loc || !window.L || wsOpen) return;
+  wsOpener = document.activeElement;
   wsSel = key; wsOpen = true;
-  $("ws").classList.add("on");
-  document.body.style.overflow = "hidden";
   wsEnsureMap();
   wm.invalidateSize();
   wsBuild(true);
-  $("wsBack").focus();
+  document.body.style.overflow = "hidden";
+  $("page").inert = true;                                  // หน้าหลักเลื่อนลง และกันการกดทะลุระหว่างดูสถานี
+  $("ws").classList.add("on");                             // หน้าสถานีเลื่อนขึ้นจากด้านล่างจอ
+  document.documentElement.classList.add("ws-open");
+  setTimeout(() => { if (wsOpen) { wm.invalidateSize(); $("wsBack").focus({ preventScroll: true }); } }, 80);
 }
-function closeWs() { wsOpen = false; $("ws").classList.remove("on"); document.body.style.overflow = ""; }
+function closeWs() {
+  if (!wsOpen) return;
+  wsOpen = false;
+  $("ws").classList.remove("on");                          // หน้าสถานีเลื่อนลงกลับไปด้านล่าง
+  document.documentElement.classList.remove("ws-open");    // หน้าหลักเลื่อนกลับขึ้นมา
+  $("page").inert = false;
+  if (wsOpener && wsOpener.isConnected) wsOpener.focus({ preventScroll: true });
+  setTimeout(() => { if (!wsOpen) document.body.style.overflow = ""; }, 520);
+}
 
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-ws]");

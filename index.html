@@ -194,7 +194,7 @@ html.theme-anim,html.theme-anim *{transition:background-color .5s ease,color .5s
 .wl-row[data-ws]:hover{background:var(--panel2)}
 /* ขากลับ: หน้าหลักเด้งขึ้นมาแบบสปริง / ขาเข้า: หน้าหลักค่อยๆ เลื่อนลงและจางลง */
 .wrap{transition:transform .7s cubic-bezier(.34,1.56,.64,1),opacity .4s ease}
-html.ws-open .wrap{transform:translateY(100vh);opacity:.35;transition:transform .55s cubic-bezier(.5,0,.2,1),opacity .55s ease}
+html.ws-open .wrap,html.sos-open .wrap{transform:translateY(100vh);opacity:.35;transition:transform .55s cubic-bezier(.5,0,.2,1),opacity .55s ease}
 /* หน้าสถานี: เด้งขึ้นจากล่างจอแบบสปริง (ล้นขึ้นไปนิดหนึ่งแล้วเด้งกลับ) ตอนปิดจะดึงขึ้นนิดหนึ่งก่อนร่วงลง */
 .ws{position:fixed;top:0;left:0;right:0;bottom:-12vh;padding-bottom:12vh;z-index:90;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);color:var(--text);
   visibility:hidden;transform:translateY(100%);border-radius:28px 28px 0 0;box-shadow:0 -14px 44px rgba(0,0,0,.28);
@@ -256,6 +256,61 @@ html.ws-open .wrap{transform:translateY(100vh);opacity:.35;transition:transform 
 .ws-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-size:.84rem;white-space:nowrap}
 .ws-chip span{color:var(--mute)}
 .ws-chip.on{border-color:var(--water);box-shadow:inset 0 0 0 1px var(--water)}
+
+/* ปุ่ม SOS ลอย + หน้าต่างขอความช่วยเหลือ */
+.sos-fab{position:fixed;z-index:85;right:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:10px;padding:8px 18px 8px 8px;border:0;border-radius:999px;color:#fff;font-weight:700;font-size:.95rem;
+  background:linear-gradient(135deg,#ff8a1f,#e5222f);box-shadow:0 8px 26px rgba(255,80,30,.55),0 0 34px rgba(255,70,40,.45);animation:sosGlow 2.2s ease-out infinite}
+.sos-fab-ico{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.24);font-size:.95rem;font-weight:800;letter-spacing:.04em}
+@keyframes sosGlow{0%{box-shadow:0 0 0 0 rgba(255,90,40,.65),0 8px 26px rgba(255,80,30,.55),0 0 34px rgba(255,70,40,.45)}
+  70%,100%{box-shadow:0 0 0 22px rgba(255,90,40,0),0 8px 26px rgba(255,80,30,.55),0 0 34px rgba(255,70,40,.45)}}
+@media (max-width:380px){.sos-fab-txt{display:none}.sos-fab{padding:8px}}
+.sos{position:fixed;top:0;left:0;right:0;bottom:-12vh;padding-bottom:12vh;z-index:92;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);color:var(--text);
+  visibility:hidden;transform:translateY(100%);border-radius:28px 28px 0 0;box-shadow:0 -14px 44px rgba(0,0,0,.28);
+  transition:transform .45s cubic-bezier(.6,-.28,.735,.045),border-radius .45s ease,visibility 0s linear .45s}
+.sos.on{visibility:visible;transform:none;border-radius:0;transition:transform .7s cubic-bezier(.34,1.45,.5,1),border-radius .7s ease,visibility 0s}
+.sos [hidden]{display:none!important}
+.sos-body{flex:1;min-height:0;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
+.sos-body>*{width:100%;max-width:640px;margin:0 auto;flex:none}
+.sos.on .sos-body>*{animation:wsUp2 .55s cubic-bezier(.34,1.4,.64,1) both;animation-delay:calc(.3s + var(--n,0) * 70ms)}
+.sos-body>:nth-child(2){--n:1}.sos-body>:nth-child(3){--n:2}.sos-body>:nth-child(4){--n:3}.sos-body>:nth-child(5){--n:4}.sos-body>:nth-child(6){--n:5}
+.sos-warn{padding:12px 14px;border-radius:14px;font-size:.9rem;background:color-mix(in srgb,var(--crit) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--crit) 40%,var(--line))}
+.sos-sec{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px 16px 18px;box-shadow:var(--shadow)}
+.sos-sec h3{font-size:1rem;margin-bottom:10px}
+.sos-sec h3 small{font-weight:400;color:var(--mute);margin-left:6px;font-size:.78rem}
+.sos-seg{display:flex;gap:6px;padding:4px;border-radius:999px;background:var(--panel2);margin-bottom:12px}
+.sos-seg button{flex:1;border:0;border-radius:999px;background:transparent;font-weight:600;color:var(--mute)}
+.sos-seg button[aria-pressed="true"]{background:linear-gradient(135deg,#ff8a1f,#e5222f);color:#fff;box-shadow:0 6px 16px rgba(229,34,47,.35)}
+.sos-info{padding:10px 12px;border-radius:12px;background:var(--panel2);font-size:.9rem;margin-bottom:8px}
+.sos-lab{display:block;margin:12px 0 6px;font-size:.84rem;color:var(--mute);font-weight:600}
+.sos textarea,.sos input[type=tel],.sos input[type=number],.sos select{width:100%;font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.sos textarea{resize:vertical}
+.sos-chips{display:flex;flex-wrap:wrap;gap:8px}
+.sos-chip{position:relative;cursor:pointer}
+.sos-chip input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sos-chip span{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel2);font-weight:600;transition:background .2s,border-color .2s,color .2s}
+.sos-chip input:checked+span{background:color-mix(in srgb,var(--high) 16%,var(--panel));border-color:var(--high);color:var(--high);animation:sosPop .35s cubic-bezier(.34,1.56,.64,1)}
+.sos-chip input:focus-visible+span{outline:3px solid var(--water);outline-offset:2px}
+@keyframes sosPop{0%{transform:scale(.88)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.sos-send{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.sos-send button{font-weight:600}
+.sos-note{margin-top:10px;font-size:.86rem;min-height:1.3em}
+.sos-note[data-t="bad"]{color:var(--crit)}
+.sos-note[data-t="ok"]{color:var(--ok)}
+.sos details summary{cursor:pointer;margin-top:10px;font-size:.88rem;color:var(--mute)}
+.sos pre{white-space:pre-wrap;word-break:break-word;font:inherit;font-size:.84rem;background:var(--panel2);border-radius:12px;padding:12px;margin-top:8px}
+.sos-foot{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.1)}
+.sos-call{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;color:#fff;text-decoration:none;background:linear-gradient(135deg,#ff8a1f,#e5222f);box-shadow:0 8px 22px rgba(229,34,47,.4)}
+.sos-call:active,.sos-mini:active{transform:scale(.97)}
+.sos-call .ico{font-size:1.6rem;display:inline-block;transform-origin:50% 60%;animation:sosRing 2.4s ease-in-out infinite}
+.sos-call b{display:block;font-size:1.05rem;line-height:1.3}
+.sos-call small{display:block;font-size:.76rem;opacity:.94;line-height:1.35}
+.sos-mini{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:76px;padding:8px 10px;border-radius:16px;text-decoration:none;color:var(--text);background:var(--panel2);border:1px solid var(--line);font-weight:700}
+.sos-mini small{font-weight:500;font-size:.7rem;color:var(--mute)}
+@keyframes sosRing{0%,60%,100%{transform:none}65%{transform:rotate(-14deg)}70%{transform:rotate(14deg)}75%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}85%{transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .sos,.sos.on{transition:none}
+  .sos.on .sos-body>*,.sos-fab,.sos-chip input:checked+span,.sos-call .ico{animation:none!important}
+}
 
 @media (max-width:800px){
   .banner{grid-template-columns:1fr;justify-items:center;gap:18px;padding:22px}
@@ -397,6 +452,84 @@ html.ws-open .wrap{transform:translateY(100vh);opacity:.35;transition:transform 
   <footer>ข้อมูลฝนจาก Open-Meteo • ระดับน้ำจาก ThaiWater • คำนวณความเสี่ยงเบื้องต้นจากปริมาณฝน โอกาสฝนตก และระดับน้ำที่สถานีใกล้เคียง ไม่ใช้แทนประกาศทางการ</footer>
 </div>
 
+<button type="button" class="sos-fab" id="sosFab" aria-label="ขอความช่วยเหลือฉุกเฉิน"><span class="sos-fab-ico" aria-hidden="true">SOS</span><span class="sos-fab-txt">ขอความช่วยเหลือ</span></button>
+
+<div class="sos" id="sos" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
+  <div class="ws-top">
+    <button type="button" id="sosBack" class="icon-btn" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 id="sosTitle">ขอความช่วยเหลือ</h2>
+  </div>
+  <div class="sos-body" id="sosBody">
+    <div class="sos-warn">🚨 ถ้าอยู่ในอันตรายถึงชีวิต ให้กดโทรด้านล่างก่อน แล้วค่อยกรอกข้อมูลเพื่อส่งต่อ</div>
+
+    <section class="sos-sec">
+      <h3>📍 ตำแหน่ง</h3>
+      <div class="sos-seg" id="sosSeg">
+        <button type="button" data-m="gps" aria-pressed="true">GPS ปัจจุบัน</button>
+        <button type="button" data-m="manual" aria-pressed="false">กรอกเอง</button>
+      </div>
+      <div id="sosGps">
+        <div class="sos-info" id="sosGpsInfo">กำลังหาตำแหน่ง...</div>
+        <button type="button" id="sosLocate">🔄 อัปเดตตำแหน่ง</button>
+      </div>
+      <div id="sosManual" hidden>
+        <textarea id="sosAddr" rows="3" placeholder="บ้านเลขที่ หมู่ ตำบล อำเภอ หรือจุดสังเกต เช่น ใกล้วัด..."></textarea>
+      </div>
+      <label class="sos-lab" for="sosProv">จังหวัด (ใช้เลือกเบอร์ศูนย์ช่วยเหลือ)</label>
+      <select id="sosProv"></select>
+    </section>
+
+    <section class="sos-sec">
+      <h3>🙋 ความต้องการ <small>เลือกได้หลายอย่าง</small></h3>
+      <div class="sos-chips" id="sosNeeds">
+        <label class="sos-chip"><input type="checkbox" value="ออกจากพื้นที่"><span>🚤 ออกจากพื้นที่</span></label>
+        <label class="sos-chip"><input type="checkbox" value="อาหาร/น้ำดื่ม"><span>🍚 ต้องการอาหาร</span></label>
+        <label class="sos-chip"><input type="checkbox" value="ยา/การรักษาพยาบาล"><span>💊 ต้องการยา</span></label>
+      </div>
+    </section>
+
+    <section class="sos-sec">
+      <h3>👥 จำนวนคน <small>เลือกได้หลายอย่าง</small></h3>
+      <div class="sos-chips" id="sosWho">
+        <label class="sos-chip"><input type="checkbox" value="เด็ก"><span>🧒 มีเด็ก</span></label>
+        <label class="sos-chip"><input type="checkbox" value="ผู้ใหญ่"><span>🧑 มีผู้ใหญ่</span></label>
+        <label class="sos-chip"><input type="checkbox" value="คนชรา"><span>👵 มีคนชรา</span></label>
+        <label class="sos-chip"><input type="checkbox" value="คนพิการ"><span>♿ มีคนพิการ</span></label>
+        <label class="sos-chip"><input type="checkbox" value="ผู้ป่วยติดเตียง"><span>🛏️ มีผู้ป่วยติดเตียง</span></label>
+      </div>
+      <label class="sos-lab" for="sosCount">รวมกี่คน (ถ้าทราบ)</label>
+      <input type="number" id="sosCount" min="1" max="999" inputmode="numeric" placeholder="เช่น 4">
+    </section>
+
+    <section class="sos-sec">
+      <h3>📞 ติดต่อกลับ</h3>
+      <label class="sos-lab" for="sosPhone" style="margin-top:0">เบอร์โทรที่ติดต่อได้</label>
+      <input type="tel" id="sosPhone" inputmode="tel" placeholder="08x-xxx-xxxx">
+      <label class="sos-lab" for="sosNote">รายละเอียดเพิ่มเติม</label>
+      <textarea id="sosNote" rows="2" placeholder="เช่น น้ำท่วมสูงประมาณเอว ชั้นล่างเข้าไม่ได้"></textarea>
+    </section>
+
+    <section class="sos-sec">
+      <h3>📤 ส่งต่อข้อมูลขอความช่วยเหลือ</h3>
+      <div class="sos-info">แอปนี้ยังไม่ได้ส่งข้อมูลเข้าระบบของหน่วยงานโดยอัตโนมัติ ข้อมูลจะถูกส่งต่อผ่านช่องทางที่คุณเลือก (LINE, SMS, แชร์ หรือคัดลอก)</div>
+      <div class="sos-send" id="sosSend">
+        <button type="button" data-s="line">💬 LINE</button>
+        <button type="button" data-s="sms">✉️ SMS</button>
+        <button type="button" data-s="share" id="sosShareBtn">📤 แชร์</button>
+        <button type="button" data-s="mail" id="sosMailBtn" hidden>📧 อีเมล</button>
+        <button type="button" data-s="copy">📋 คัดลอก</button>
+      </div>
+      <div class="sos-note" id="sosErr" role="alert"></div>
+      <details><summary>ดูข้อความที่จะส่ง</summary><pre id="sosPreview"></pre></details>
+    </section>
+  </div>
+  <div class="sos-foot">
+    <a class="sos-call" id="sosCall" href="tel:1784"><span class="ico" aria-hidden="true">📞</span><span><b id="sosCallName">โทร 1784 สายด่วน ปภ.</b><small id="sosCallSub">ใช้ได้ทุกจังหวัด</small></span></a>
+    <a class="sos-mini" href="tel:1669">1669<small>แพทย์ฉุกเฉิน</small></a>
+    <a class="sos-mini" href="tel:191">191<small>ตำรวจ</small></a>
+  </div>
+</div>
+
 <div class="ws" id="ws" role="dialog" aria-modal="true" aria-labelledby="wsTitle">
   <div class="ws-top">
     <button type="button" id="wsBack" class="icon-btn" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -470,7 +603,7 @@ async function lookupName() {
     const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=th&lat=" + loc.lat + "&lon=" + loc.lon);
     const a = (await r.json()).address || {};
     const parts = [a.suburb || a.village || a.neighbourhood, a.town || a.city || a.county || a.state_district, a.state].filter(Boolean);
-    if (parts.length) { loc.name = parts.join(", "); saveLoc(); showLocation(); }
+    if (parts.length) { loc.name = parts.join(", "); saveLoc(); showLocation(); if (sosOpen) sosRenderLoc(); }
   } catch (e) { /* ใช้พิกัดแทนชื่อสถานที่ */ }
 }
 
@@ -1359,6 +1492,163 @@ $("wsAll").onclick = () => {
   if (pts.length > 1) wm.fitBounds(pts, { padding: [60, 60], maxZoom: 13 });
 };
 $("wsSheet").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) wsSelect(b.dataset.k, true); });
+
+/* ---------- ปุ่ม SOS ขอความช่วยเหลือ ---------- */
+const PROVINCES = ["กระบี่","กรุงเทพมหานคร","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท","ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม","นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์","ปราจีนบุรี","ปัตตานี","พระนครศรีอยุธยา","พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์","แพร่","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง","ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ","สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย","หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"];
+/* เบอร์และช่องทางรับเรื่องเฉพาะจังหวัด: ใส่เฉพาะที่ตรวจสอบกับหน่วยงานแล้วเท่านั้น รูปแบบ:
+   "ตรัง": { name: "ชื่อศูนย์ช่วยเหลือ", tel: "เบอร์โทร", sms: "เบอร์รับ SMS (ถ้ามี)", email: "อีเมลรับเรื่อง (ถ้ามี)" }
+   จังหวัดที่ยังไม่ใส่ จะใช้สายด่วนระดับประเทศ 1784 แทน */
+const PROVINCE_CONTACTS = {};
+const NATIONAL = { name: "สายด่วน ปภ.", tel: "1784" };
+const sos = { mode: "gps" };
+let sosOpen = false, sosOpener = null;
+
+$("sosProv").innerHTML = '<option value="">— เลือกจังหวัด —</option>' + PROVINCES.map(p => "<option>" + p + "</option>").join("");
+$("sosShareBtn").hidden = !navigator.share;
+
+function matchProvince(t) {
+  t = String(t || "").replace(/^จังหวัด\s*/, "").replace(/\s+/g, "");
+  if (/^กรุงเทพ/.test(t)) return "กรุงเทพมหานคร";
+  return PROVINCES.find(p => p === t) || "";
+}
+function sosContact() {
+  const p = $("sosProv").value, c = PROVINCE_CONTACTS[p];
+  return c && c.tel ? Object.assign({ sms: "", email: "" }, c, { prov: p, specific: true })
+    : { prov: p, specific: false, name: NATIONAL.name, tel: NATIONAL.tel, sms: "", email: "" };
+}
+function sosMessage() {
+  const pick = sel => [...document.querySelectorAll(sel + " input:checked")].map(i => i.value);
+  const needs = pick("#sosNeeds"), who = pick("#sosWho"), prov = $("sosProv").value;
+  const L2 = ["🆘 ขอความช่วยเหลือ (ส่งจากแอป FAST)"];
+  if (prov) L2.push("จังหวัด: " + prov);
+  if (sos.mode === "gps" && loc) {
+    if (loc.name) L2.push("พื้นที่: " + loc.name);
+    L2.push("พิกัด GPS: " + loc.lat.toFixed(5) + ", " + loc.lon.toFixed(5) + (loc.acc ? " (±" + Math.round(loc.acc) + " ม.)" : ""));
+    L2.push("แผนที่: https://maps.google.com/?q=" + loc.lat.toFixed(6) + "," + loc.lon.toFixed(6));
+  } else if (sos.mode === "manual" && $("sosAddr").value.trim()) L2.push("ที่อยู่/จุดสังเกต: " + $("sosAddr").value.trim());
+  L2.push("ต้องการ: " + (needs.length ? needs.join(", ") : "-"));
+  if (who.length) L2.push("ผู้ที่ต้องดูแล: " + who.join(", "));
+  if ($("sosCount").value) L2.push("จำนวนคนรวม: " + $("sosCount").value + " คน");
+  if ($("sosPhone").value.trim()) L2.push("โทรกลับ: " + $("sosPhone").value.trim());
+  if ($("sosNote").value.trim()) L2.push("รายละเอียด: " + $("sosNote").value.trim());
+  L2.push("เวลาที่ส่ง: " + new Date().toLocaleString("th-TH", { hour12: false }));
+  return L2.join("\n");
+}
+function sosCheck() {
+  const e = [];
+  if (sos.mode === "gps" && !loc) e.push("ยังไม่ทราบตำแหน่ง GPS");
+  if (sos.mode === "manual" && !$("sosAddr").value.trim()) e.push("กรอกที่อยู่หรือจุดสังเกต");
+  if (!document.querySelector("#sosNeeds input:checked")) e.push("เลือกความต้องการอย่างน้อย 1 อย่าง");
+  return e;
+}
+function sosNote(t, bad) { const n = $("sosErr"); n.textContent = t; n.dataset.t = bad ? "bad" : "ok"; }
+
+function sosRefresh() {
+  const c = sosContact();
+  $("sosCall").href = "tel:" + c.tel.replace(/[^\d+]/g, "");
+  $("sosCallName").textContent = "โทร " + c.tel + (c.specific ? "" : " สายด่วน ปภ.");
+  $("sosCallSub").textContent = c.specific ? c.name : (c.prov ? "ใช้ได้ทุกจังหวัด (ยังไม่ได้ตั้งค่าเบอร์ศูนย์ของจ." + c.prov + ")" : "ใช้ได้ทุกจังหวัด");
+  $("sosMailBtn").hidden = !c.email;
+  $("sosPreview").textContent = sosMessage();
+}
+function sosRenderLoc() {
+  const g = $("sosGpsInfo");
+  if (!loc) { g.textContent = "ยังไม่ทราบตำแหน่ง กดอัปเดตตำแหน่ง หรือเลือก “กรอกเอง”"; return; }
+  g.innerHTML = "📍 " + esc(loc.name || "ตำแหน่งปัจจุบัน") + "<br><span class=\"sub\">" + loc.lat.toFixed(5) + ", " + loc.lon.toFixed(5) + (loc.acc ? " • แม่นยำ ±" + Math.round(loc.acc) + " ม." : "") + "</span>";
+  sosRefresh();
+}
+async function sosFindProv() {
+  if (!loc) return;
+  const me = loc;
+  if (me.prov === undefined) {
+    try {
+      const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=8&accept-language=th&lat=" + me.lat + "&lon=" + me.lon);
+      const a = (await r.json()).address || {};
+      me.prov = matchProvince(a.state || a.province || a.city || "");
+    } catch (e) { me.prov = ""; }
+  }
+  if (sos.mode === "gps" && loc === me && me.prov) $("sosProv").value = me.prov;
+  sosRefresh();
+}
+function sosLocate(force) {
+  sosRenderLoc();
+  if (loc && !force) { sosFindProv(); return; }
+  if (!navigator.geolocation) { $("sosGpsInfo").textContent = "เบราว์เซอร์นี้ไม่รองรับ GPS ให้เลือก “กรอกเอง”"; return; }
+  $("sosGpsInfo").textContent = "กำลังหาตำแหน่ง...";
+  navigator.geolocation.getCurrentPosition(p => {
+    const { latitude: lat, longitude: lon, accuracy: acc } = p.coords;
+    if (!loc || distKm(loc.lat, loc.lon, lat, lon) > 0.05) setLocation(lat, lon, acc); else loc.acc = acc;
+    sosRenderLoc(); sosFindProv();
+  }, e => {
+    $("sosGpsInfo").textContent = e.code === 1 ? "ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง อนุญาตในเบราว์เซอร์ หรือเลือก “กรอกเอง”" : "หาตำแหน่งไม่ได้ ลองใหม่ หรือเลือก “กรอกเอง”";
+    sosRefresh();
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+}
+function sosSetMode(m) {
+  sos.mode = m;
+  $("sosGps").hidden = m !== "gps";
+  $("sosManual").hidden = m !== "manual";
+  document.querySelectorAll("#sosSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m));
+  if (m === "gps") sosFindProv();
+  sosRefresh();
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); }
+  catch (e) {
+    const a = document.createElement("textarea");
+    a.value = t; a.style.position = "fixed"; a.style.opacity = "0";
+    document.body.appendChild(a); a.select(); document.execCommand("copy"); a.remove();
+  }
+}
+async function sosSend(kind) {
+  const err = sosCheck();
+  if (err.length) { sosNote("⚠️ " + err.join(" • "), true); return; }
+  const msg = sosMessage(), c = sosContact();
+  try {
+    if (kind === "line") window.open("https://line.me/R/msg/text/?" + encodeURIComponent(msg), "_blank", "noopener");
+    else if (kind === "sms") {
+      const ios = /iPad|iPhone|iPod/.test(navigator.userAgent), to = (c.sms || "").replace(/[^\d+]/g, "");
+      location.href = "sms:" + to + (ios ? (to ? "&" : "?&") : "?") + "body=" + encodeURIComponent(msg);
+    } else if (kind === "mail") location.href = "mailto:" + c.email + "?subject=" + encodeURIComponent("ขอความช่วยเหลือ" + (c.prov ? " จ." + c.prov : "")) + "&body=" + encodeURIComponent(msg);
+    else if (kind === "share") await navigator.share({ title: "ขอความช่วยเหลือ", text: msg });
+    else if (kind === "copy") { await copyText(msg); sosNote("คัดลอกข้อความแล้ว นำไปวางส่งใน LINE หรือ SMS ได้เลย"); return; }
+    sosNote("เปิดแอปส่งข้อความแล้ว กดส่งในแอปนั้นเพื่อส่งต่อ (FAST ไม่ได้ส่งให้อัตโนมัติ)");
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    sosNote("ส่งไม่สำเร็จ ลองกดคัดลอกข้อความแทน", true);
+  }
+}
+
+function openSos() {
+  if (sosOpen || wsOpen) return;
+  sosOpener = document.activeElement; sosOpen = true;
+  document.body.style.overflow = "hidden";
+  $("page").inert = true;
+  $("sosBody").scrollTop = 0;
+  sosNote("");
+  sosSetMode(sos.mode);
+  sosLocate(false);
+  $("sos").classList.add("on");
+  document.documentElement.classList.add("sos-open");
+  setTimeout(() => { if (sosOpen) $("sosBack").focus({ preventScroll: true }); }, 80);
+}
+function closeSos() {
+  if (!sosOpen) return;
+  sosOpen = false;
+  $("sos").classList.remove("on");
+  document.documentElement.classList.remove("sos-open");
+  $("page").inert = false;
+  if (sosOpener && sosOpener.isConnected) sosOpener.focus({ preventScroll: true });
+  setTimeout(() => { if (!sosOpen && !wsOpen) document.body.style.overflow = ""; }, 800);
+}
+$("sosFab").onclick = openSos;
+$("sosBack").onclick = closeSos;
+$("sosLocate").onclick = () => sosLocate(true);
+$("sosSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (b) sosSetMode(b.dataset.m); });
+$("sosSend").addEventListener("click", e => { const b = e.target.closest("button"); if (b) sosSend(b.dataset.s); });
+$("sosBody").addEventListener("input", sosRefresh);
+$("sosBody").addEventListener("change", sosRefresh);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && sosOpen) closeSos(); });
 
 /* ---------- เริ่มทำงาน ---------- */
 $("gps").onclick = startAuto;
